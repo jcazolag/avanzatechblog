@@ -1,0 +1,40 @@
+<header class="w-full bg-white shadow-md">
+    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+        <!-- Logo + Title -->
+        <a routerLink="/" class="flex items-center space-x-2">
+            <img src="assets/Logo.png" alt="Logo" class="h-8 w-8" />
+            <span class="text-xl font-semibold">Avanzatech</span>
+        </a>
+
+        <!-- Hamburger Button (mobile) -->
+        <button class="md:hidden" (click)="toggleMenu()">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+
+        <!-- Desktop Menu -->
+        <nav class="hidden md:flex space-x-4 items-center">
+            @if (user()) {
+            <span class="text-sm text-gray-700">{{ user()?.email }}</span>
+            <button (click)="logout()" class="text-blue-600 hover:underline">Logout</button>
+            } @else {
+            <a routerLink="/login" class="text-blue-600 hover:underline">Login</a>
+            <a routerLink="/register" class="text-blue-600 hover:underline">Register</a>
+            }
+        </nav>
+    </div>
+
+    <!-- Mobile Menu -->
+    @if (menu()) {
+        <div class="md:hidden px-4 pb-4 space-y-2">
+            @if (user()) {
+            <p class="text-sm text-gray-700">{{ user()?.email }}</p>
+            <button (click)="logout()" class="block text-blue-600 hover:underline">Logout</button>
+            } @else {
+            <a routerLink="/login" class="block text-blue-600 hover:underline">Login</a>
+            <a routerLink="/register" class="block text-blue-600 hover:underline">Register</a>
+            }
+        </div>
+    }
+</header>

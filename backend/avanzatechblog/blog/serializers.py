@@ -11,6 +11,7 @@ class BlogSerializer(serializers.ModelSerializer):
             'title',
             'content',
             'excerpt',
+            'timestamp',
             'author_access',
             'team_access',
             'authenticated_access',
@@ -19,7 +20,8 @@ class BlogSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'author': {'read_only': True},
             'excerpt': {'read_only': True},
-            'id': {'read_only': True}
+            'id': {'read_only': True},
+            'timestamp': {'read_only': True}
         }
 
     def validate(self, data):

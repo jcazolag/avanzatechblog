@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',
     'api',
     'user',
     'blog',
@@ -48,6 +49,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -133,5 +135,31 @@ AUTH_USER_MODEL = 'user.User'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
-    ]
+    ],
 }
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000"
+]
+
+CSRF_COOKIE_HTTPONLY = False         # Necesario para que Angular pueda leerla con document.cookie
+CSRF_COOKIE_SAMESITE = 'Lax'         # Lax está bien mientras no cruces dominios
+CSRF_COOKIE_SECURE = False           # True solo si estás usando HTTPS
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:4200",
+    "http://127.0.0.1:4200",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000"
+]
+
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_AGE = 60 * 60 * 24 * 7
+CSRF_EXPIRE_AT_BROWSER_CLOSE = False 
+SESSION_COOKIE_AGE = 1209600  # 2 semanas
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False 
