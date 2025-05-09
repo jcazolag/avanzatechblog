@@ -46,17 +46,23 @@ class BlogViewSet(viewsets.ModelViewSet):
     pagination_class = BlogPagination
 
     def create(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return Response({'detail': 'You have to be loged to post a blog.'}, status=status.HTTP_400_BAD_REQUEST)
-        if request.user.is_staff:
-            return Response({'detail': 'Admins can not create blogs'}, status=status.HTTP_400_BAD_REQUEST)
-        return super().create(request, *args, **kwargs)
+        user = request.user
+        if not user.is_authenticated:
+            return Response({'message': 'You have to be loged to post a blog.'}, status=status.HTTP_400_BAD_REQUEST)
+        if user.is_staff:
+            return Response({'message': 'Admins can not create blogs'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response({"message": "success", "post": serializer.data}, status=status.HTTP_201_CREATED)
+        return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
         user = request.user
         blog = self.get_object()  # Maneja automáticamente el 404
         if not can_edit_blog(user, blog):
-            return Response({"detail": "You don't have permission to edit this blog."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "You don't have permission to edit this blog."}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(blog, data=request.data, partial=False)
 
         if serializer.is_valid():
@@ -95,7 +101,7 @@ class BlogViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(blog)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
-        return Response({'detail': 'You do not have access to this blog.'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'message': 'You do not have access to this blog.'}, status=status.HTTP_401_UNAUTHORIZED)
     
     def destroy(self, request, *args, **kwargs):
         user = request.user
@@ -103,5 +109,5 @@ class BlogViewSet(viewsets.ModelViewSet):
 
         if can_edit_blog(user, blog):
             self.perform_destroy(blog)
-            return Response({"detail": "Blog removed successfully."},status=status.HTTP_204_NO_CONTENT)
-        return Response({'detail': 'You do not have permission to delete this blog.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"message": "Blog removed successfully."},status=status.HTTP_204_NO_CONTENT)
+        return Response({'message': 'You do not have permission to delete this blog.'}, status=status.HTTP_401_UNAUTHORIZED)

@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 
 class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    blog = models.ForeignKey(Blog, on_delete=models.CASCADE)
+    blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='comments')
     content = models.TextField(null=False, blank=False)
     timestamp = models.DateTimeField(auto_now_add=True)
 
@@ -16,7 +16,7 @@ class Comment(models.Model):
         ordering = ["-timestamp"]
 
     def __str__(self):
-        return f"Comment by {self.user.username} on {self.blog.title}"
+        return f"Comment by {self.user.email} on {self.blog.title}"
 
     def can_comment_blog(self):
         """Verifica si el usuario tiene acceso para comentar a un blog."""

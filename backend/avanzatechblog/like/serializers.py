@@ -14,11 +14,12 @@ def can_view_blog(user, blog):
     )
 
 class LikeSerializer(serializers.ModelSerializer):
-    blog_title = serializers.CharField(source='blog.title', read_only=True)
+    #blog_title = serializers.CharField(source='blog.title', read_only=True)
+    user_name = serializers.CharField(source='user.email', read_only=True)
 
     class Meta:
         model = Like
-        fields = ['id', 'user', 'blog', 'blog_title', 'created_at']
+        fields = ['id', 'user', 'blog', 'user_name', 'created_at']
         read_only_fields = ['user', 'created_at', 'blog']
 
     def validate(self, data):

@@ -11,7 +11,6 @@ import { AuthResponse } from '@models/auth.models';
 export class UserService {
   apiUrl: string = environment.API_URL;
   user: WritableSignal<User | undefined> = signal<User | undefined>(undefined);
-  userLoaded: boolean = false;
 
   constructor(
     private tokenService: TokenService,
@@ -22,16 +21,24 @@ export class UserService {
 
   getUserInfo() {
     if (!this.user()) {
-      this.http.get<AuthResponse>(`${this.apiUrl}/api/user/retrieve/`, { withCredentials: true })
+      const user = localStorage.getItem('user');
+      if(user){
+        const obj: User = JSON.parse(user)
+        this.user.set(obj);
+        return;
+      }
+
+      /*
+      this.http.get<AuthResponse>(`${this.apiUrl}/api/user/me/`, { withCredentials: true })
         .subscribe({
           next: (response) => {
             this.user.set(response.User);
-            this.userLoaded = true;
           },
           error: (err) => {
             console.warn('No se pudo cargar el usuario: ', err.error.message);
           }
         });
+        */
     }
   }
 }

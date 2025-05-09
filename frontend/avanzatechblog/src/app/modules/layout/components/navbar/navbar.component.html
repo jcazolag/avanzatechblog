@@ -1,8 +1,8 @@
-<header class="w-full bg-white shadow-md">
-    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+<header class="w-full bg-neutral-100 border-b shadow-2xl">
+    <div class="mx-auto px-4 py-3 flex justify-between items-center">
         <!-- Logo + Title -->
         <a routerLink="/" class="flex items-center space-x-2">
-            <img src="assets/Logo.png" alt="Logo" class="h-8 w-8" />
+            <img src="assets/Logo.png" alt="Logo" class="h-8 w-10" />
             <span class="text-xl font-semibold">Avanzatech</span>
         </a>
 
@@ -17,7 +17,11 @@
         <nav class="hidden md:flex space-x-4 items-center">
             @if (user()) {
             <span class="text-sm text-gray-700">{{ user()?.email }}</span>
-            <button (click)="logout()" class="text-blue-600 hover:underline">Logout</button>
+            <button (click)="logout()" class="text-blue-600 hover:text-neutral-600 cursor-pointer">
+                <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5 7.5L10.5 10.75M13.5 7.5L10.5 4.5M13.5 7.5L4 7.5M8 13.5H1.5L1.5 1.5L8 1.5" stroke="currentColor"/>
+                    </svg>
+            </button>
             } @else {
             <a routerLink="/login" class="text-blue-600 hover:underline">Login</a>
             <a routerLink="/register" class="text-blue-600 hover:underline">Register</a>
@@ -30,10 +34,14 @@
         <div class="md:hidden px-4 pb-4 space-y-2">
             @if (user()) {
             <p class="text-sm text-gray-700">{{ user()?.email }}</p>
-            <button (click)="logout()" class="block text-blue-600 hover:underline">Logout</button>
+            <button (click)="logout()" class="block text-blue-600 hover:text-neutral-600 cursor-pointer" >
+                <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M13.5 7.5L10.5 10.75M13.5 7.5L10.5 4.5M13.5 7.5L4 7.5M8 13.5H1.5L1.5 1.5L8 1.5" stroke="currentColor"/>
+                    </svg>
+            </button>
             } @else {
-            <a routerLink="/login" class="block text-blue-600 hover:underline">Login</a>
-            <a routerLink="/register" class="block text-blue-600 hover:underline">Register</a>
+            <a routerLink="/login" class="block text-blue-600 hover:underline cursor-pointer">Login</a>
+            <a routerLink="/register" class="block text-blue-600 hover:underline cursor-pointer">Register</a>
             }
         </div>
     }

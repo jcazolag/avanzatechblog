@@ -7,7 +7,7 @@
             <label for="email">
                 Email
                 <input formControlName="email" placeholder="" type="email" name="email"
-                    class="w-full rounded bg-gray-100 border-gray-300 border-2" />
+                    class="bg-gray-100 border border-gray-300 text-gray-900 rounded-lg block w-full p-2" />
             </label>
         </div>
         @if (form.get('email')?.touched && form.get('email')?.invalid) {
@@ -26,11 +26,12 @@
             <label for="password">
                 Password
                 <input formControlName="password" placeholder="" [type]="showPassword ? 'text' : 'password'"
-                    class="w-full rounded bg-gray-100 border-gray-300 border-2" />
+                    class="bg-gray-100 border border-gray-300 text-gray-900 rounded-lg block w-full p-2" />
+                <div class="flex items-center my-2">
+                    <input (click)="togglePassword($event)" id="default-checkbox" type="checkbox" value="" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded-sm focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                    <label for="default-checkbox" class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">Show password</label>
+                </div>
             </label>
-            <button type="button" class="p-2 absolute right-2 top-1" (click)="showPassword = !showPassword">
-                
-            </button>
         </div>
         @if (form.get('password')?.touched && form.get('password')?.invalid) {
         @if (form.get('password')?.hasError('required')) {
@@ -39,13 +40,16 @@
         @if (form.get('password')?.hasError('minlength')) {
         <p class="text-red-500 text-xs mt-1 ml-1">Should be at least 4 characters</p>
         }
+        @if (form.get('password')?.hasError('maxlength')) {
+        <p class="text-red-500 text-xs mt-1 ml-1">Should be 128 characters or less</p>
+        }
         }
     </div>
 
     <!-- Submit Button -->
     <div class="text-center">
         <button type="submit"
-            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Login</button>
+            class="text-white cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Login</button>
     </div>
 </form>
 

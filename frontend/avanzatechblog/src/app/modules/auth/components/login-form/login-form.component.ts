@@ -14,7 +14,7 @@ export class LoginFormComponent {
   form: FormGroup;
 
   status: RequestStatus = 'init';
-  showPassword = false;
+  showPassword: boolean = false;
   message = signal<string>('');
 
   constructor( 
@@ -25,12 +25,16 @@ export class LoginFormComponent {
     this.form = this.formBuilder.group(
       {
         email: ['', [Validators.email, Validators.required]],
-        password: ['', [Validators.minLength(4) ,Validators.required]]
+        password: ['', [Validators.minLength(4) ,Validators.required, Validators.maxLength(128)]]
       }
     );
   }
 
-  login(): any {
+  togglePassword(event: Event){
+    this.showPassword = !this.showPassword;
+  }
+
+  login() {
     if (this.form.valid) {
       this.status = 'loading';
       const { email, password } = this.form.getRawValue();

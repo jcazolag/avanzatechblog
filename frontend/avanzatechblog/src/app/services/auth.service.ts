@@ -6,6 +6,8 @@ import { Observable, switchMap, tap } from 'rxjs';
 import { environment } from '@environment/environment';
 import { AuthResponse } from '@models/auth.models';
 import { UserService } from './user.service';
+import { BlogService } from './blog.service';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
@@ -16,21 +18,10 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private tokenService: TokenService,
-    private userService: UserService
+    private userService: UserService,
+    private blogService: BlogService,
+    private router: Router
   ) {  }
-
-  private csrfToken(){
-    this.http.get(`${this.apiUrl}/api/get_csfr/`, {
-      withCredentials: true,
-    }).subscribe({
-      next: (response) => {
-        console.log(response)
-      },
-      error: (err) => {
-        console.log(err)
-      }
-    });
-  }
 
   login(email: string, password: string): Observable<AuthResponse>{
     return this.http.post<AuthResponse>(`${this.apiUrl}/api/user/login/`, {
@@ -42,8 +33,7 @@ export class AuthService {
     .pipe(
       tap( response =>{
         this.userService.user.set(response.User);
-        this.userService.userLoaded = true;
-        console.log(response.message);
+        localStorage.setItem('user', JSON.stringify(response.User));
       })
     );
   }
@@ -68,8 +58,14 @@ export class AuthService {
       withCredentials: true,
     }).subscribe({
       next: (response) =>{
-        console.log(response)
         this.userService.user.set(undefined);
+        localStorage.removeItem('user');
+        this.blogService.getBlog().subscribe({
+          next: (response) => {
+            this.blogService.Blog.set(response);
+          }
+        });
+        this.router.navigate(['/'])
       },
       error: (err) =>{
         console.log(err)

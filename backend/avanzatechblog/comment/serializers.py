@@ -15,10 +15,11 @@ def can_view_blog(user, blog):
 
 class CommentSerializer(serializers.ModelSerializer):
     blog_title = serializers.CharField(source='blog.title', read_only=True)
+    user_name = serializers.CharField(source='user.email', read_only=True)
 
     class Meta:
         model = Comment
-        fields = ['id', 'user', 'blog', 'content', 'blog_title', 'timestamp']
+        fields = ['id', 'user', 'user_name','blog', 'content', 'blog_title', 'timestamp']
         read_only_fields = ['user', 'timestamp', 'blog']
 
     def validate(self, data):

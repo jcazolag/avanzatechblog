@@ -7,7 +7,7 @@ from .serializers import LikeSerializer
 from django.shortcuts import get_object_or_404
 
 class LikePagination(PageNumberPagination):
-    page_size = 10
+    page_size = 15
     page_size_query_param = 'page_size'
     max_page_size = 100
 
@@ -35,10 +35,10 @@ class LikeViewSet(viewsets.ModelViewSet):
 
         # Validar que el usuario tenga acceso al blog
         if not self._can_like_blog(user, blog):
-            return Response({"detail": "You do not have permission to like this blog."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "You do not have permission to like this blog."}, status=status.HTTP_403_FORBIDDEN)
         # Verificar si el usuario ya ha dado like
         if Like.objects.filter(user=user, blog=blog).exists():
-            return Response({"detail": "You have already liked this blog."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "You have already liked this blog."}, status=status.HTTP_400_BAD_REQUEST)
 
 
         # Crear like
@@ -97,7 +97,7 @@ class LikeViewSet(viewsets.ModelViewSet):
 
         # Eliminar el like
         like.delete()
-        return Response({"detail": "Like removed successfully."}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "Like removed successfully."}, status=status.HTTP_204_NO_CONTENT)
 
     def _can_like_blog(self, user, blog):
         """Verifica si el usuario tiene permisos para dar like al blog."""

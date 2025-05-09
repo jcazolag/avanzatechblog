@@ -16,7 +16,7 @@ export class RegisterFormComponent {
   form: FormGroup;
 
   status: RequestStatus = 'init';
-  showPassword = signal<boolean>(false);
+  message = signal<string>('');
   
   constructor( 
     private formBuilder: FormBuilder,
@@ -26,16 +26,12 @@ export class RegisterFormComponent {
     this.form = this.formBuilder.group(
       {
         email: ['', [Validators.email, Validators.required]],
-        password: ['', [Validators.minLength(4) ,Validators.required]],
+        password: ['', [Validators.minLength(4) ,Validators.required], Validators.maxLength(128)],
         confirmPassword: ['', Validators.required]
       }, {
         validators: [CustomValidators.MatchValidator('password', 'confirmPassword')]
       }
     );
-  }
-
-  togglePassword(event: Event){
-    this.showPassword.update( show => !show );
   }
 
   register() {
@@ -50,7 +46,15 @@ export class RegisterFormComponent {
         },
         error: (err) => {
           this.status = 'failed';
-          console.log(err);
+          if (err.status === 401) {
+            this.message.set('Invalid email or password.');
+          }else if(err.status === 403){
+            this.message.set(err.error.message);
+          } else if (err.status === 0) {
+            this.message.set('Cannot connect to server.');
+          } else {
+            this.message.set(`Error ${err.status}: ${err.statusText || 'Unknown error'}`);
+          }
         }
       });
     } else {

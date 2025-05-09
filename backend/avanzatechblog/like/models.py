@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 
 class Like(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    blog = models.ForeignKey(Blog, on_delete=models.CASCADE)
+    blog = models.ForeignKey(Blog, on_delete=models.CASCADE, related_name='likes')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -15,7 +15,7 @@ class Like(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.user.username} liked {self.blog.title}"
+        return f"{self.user.email} liked {self.blog.title}"
 
     def clean(self):
         """Valida si el usuario tiene permisos para dar like."""

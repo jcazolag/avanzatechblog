@@ -3,11 +3,18 @@ from .models import Blog
 from .data.choices import ACCESS_CHOICES
 
 class BlogSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source='author.email', read_only=True)
+    author_team = serializers.IntegerField(source='author.team.id', read_only=True)
+    author_team_title = serializers.CharField(source='author.team.title', read_only=True)
+
     class Meta:
         model = Blog
         fields = [
             'id',
             'author',
+            'author_name',
+            'author_team',
+            'author_team_title',
             'title',
             'content',
             'excerpt',
@@ -15,7 +22,7 @@ class BlogSerializer(serializers.ModelSerializer):
             'author_access',
             'team_access',
             'authenticated_access',
-            'public_access'
+            'public_access',
         ]
         extra_kwargs = {
             'author': {'read_only': True},
@@ -23,7 +30,7 @@ class BlogSerializer(serializers.ModelSerializer):
             'id': {'read_only': True},
             'timestamp': {'read_only': True}
         }
-
+    
     def validate(self, data):
         """Valida que los permisos de acceso sean correctos."""
         access_fields = ['public_access', 'authenticated_access', 'team_access', 'author_access']
