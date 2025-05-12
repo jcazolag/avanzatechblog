@@ -60,12 +60,7 @@ export class AuthService {
       next: (response) =>{
         this.userService.user.set(undefined);
         localStorage.removeItem('user');
-        this.blogService.getBlog().subscribe({
-          next: (response) => {
-            this.blogService.Blog.set(response);
-          }
-        });
-        this.router.navigate(['/'])
+        window.location.reload();
       },
       error: (err) =>{
         console.log(err)

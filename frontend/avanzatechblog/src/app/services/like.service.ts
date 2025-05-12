@@ -41,7 +41,7 @@ export class LikeService {
     if (post_id !== undefined) {
       url.searchParams.append('blog_id', post_id.toString());
     }
-  
+
     if (page !== undefined) {
       url.searchParams.append('page', page.toString());
     }

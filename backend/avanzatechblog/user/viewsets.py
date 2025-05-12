@@ -15,11 +15,25 @@ class UserViewset(viewsets.ModelViewSet):
 
         if user.is_authenticated:
             return Response({"message": "You are arleady loged."}, status=status.HTTP_403_FORBIDDEN)
+        
+        email = request.data['email']
+        password = request.data['password']
+
+        if not email:
+            return Response({'message': 'Email must be set.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not password:
+            return Response({'message': 'Password must be set.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+        if User.objects.filter(email=email).exists():
+            return Response({"message": "Email already taken"}, status=status.HTTP_409_CONFLICT)
+
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
             serializer.save(user=user)
             return Response({"message": "User created succesfully" ,"User": serializer.data}, status=status.HTTP_201_CREATED)
-        return Response({"message": serializer.errors}, status=status.HTTP_409_CONFLICT)
+        return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     def retrieve(self, request, *args, **kwargs):
         """Devuelve la información del usuario solicitado por pk"""

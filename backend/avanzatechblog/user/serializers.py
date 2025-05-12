@@ -10,17 +10,11 @@ class UserSerializer(serializers.ModelSerializer):
             'password',
             'team'
         ]
-        extra_kwargs = {'password': {'write_only': True}}
+        extra_kwargs = {'password': {'write_only': True}, 'team': {'read_only': True}}
 
     def create(self, validated_data):
         email=validated_data['email']
         password=validated_data['password']
-
-        if not password:
-            raise serializers.ValidationError({'password': 'Password must be set.'})
-
-        if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError({"email": "This email is already taken."})
 
         #new_user = User.objects.create_user(email=email, username=username, password=password)
         #new_user.save()

@@ -5,6 +5,7 @@ import { FormBuilder, Validators, FormGroup, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { PostsService } from '@services/posts.service';
 import { CommonModule } from '@angular/common';
+import { BlogService } from '@services/blog.service';
 
 @Component({
   selector: 'app-create-form',
@@ -20,7 +21,8 @@ export class CreateFormComponent {
   constructor(
     private formBuilder: FormBuilder,
     private postService: PostsService,
-    private router: Router
+    private router: Router,
+    private blogService: BlogService
   ) {
     this.form = this.formBuilder.group(
       {
@@ -82,7 +84,8 @@ export class CreateFormComponent {
       this.postService.createPost(newPost)
         .subscribe({
           next: (response) => {
-            this.router.navigate(['/'])
+            this.blogService.getBlog();
+            this.router.navigate(['/post-detail', response.post?.id]);
           },
           error: (err) => {
             this.message.set(err.message)

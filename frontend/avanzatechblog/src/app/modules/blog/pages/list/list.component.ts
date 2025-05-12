@@ -17,9 +17,9 @@ export default class ListComponent {
   Blog: WritableSignal<Blog | null> = this.blogService.Blog;
   user: WritableSignal<User | undefined> = inject(UserService).user;
   @Input() Page?: number;
+  hasError: WritableSignal<boolean> = signal(false);
 
   constructor(
-    private roter: Router
   ) { }
 
   ngOnInit() {
@@ -31,18 +31,7 @@ export default class ListComponent {
   }
 
   private getBlog() {
-
-    this.blogService.getBlog(this.Page)
-      .subscribe({
-        next: (response) => {
-          if (response) {
-            this.Blog.set(response);
-          }
-        },
-        error: (err) => {
-          console.error(err);
-        }
-      });;
+    this.blogService.getBlog(this.Page);
   }
 
 }

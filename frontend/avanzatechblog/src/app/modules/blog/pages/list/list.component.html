@@ -1,4 +1,5 @@
 <main class="w-full h-[calc(100dvh-3.5rem)] min-h-min bg-gray-50">
+    @if(!hasError()){
     <div class="container mx-auto">
         <section class="pt-8 px-1 h-[calc(100dvh-8rem)] min-h-min w-full">
             <div class="grid gap-5 grid-cols-1">
@@ -16,30 +17,30 @@
                 <ul class="inline-flex -space-x-px text-base h-10 shadow-2xl">
                     <li>
                         <a routerLink="/" [queryParams]="{Page: (Blog()?.current_page || 2) - 1}" [class]="{
-                                'pointer-events-none': Blog()?.previous_page === null,
-                                'hover:bg-gray-100': Blog()?.previous_page !== null,
-                                'hover:text-gray-700': Blog()?.previous_page !== null,
-                                'cursor-pointer': Blog()?.previous_page !== null,
-                                'bg-blue-100': Blog()?.previous_page === null,
-                                'bg-white': Blog()?.previous_page !== null,
-                                'text-blue-600': Blog()?.previous_page === null,
-                                'text-gray-500': Blog()?.previous_page !== null
-                            }"
+                                    'pointer-events-none': Blog()?.previous_page === null,
+                                    'hover:bg-gray-100': Blog()?.previous_page !== null,
+                                    'hover:text-gray-700': Blog()?.previous_page !== null,
+                                    'cursor-pointer': Blog()?.previous_page !== null,
+                                    'bg-blue-100': Blog()?.previous_page === null,
+                                    'bg-white': Blog()?.previous_page !== null,
+                                    'text-blue-600': Blog()?.previous_page === null,
+                                    'text-gray-500': Blog()?.previous_page !== null
+                                }"
                             class="flex items-center justify-center px-4 h-10 ms-0 leading-tight border border-e-0 border-gray-300 rounded-s-lg">
                             < </a>
                     </li>
                     @for (num of [].constructor(Blog()?.total_pages); track $index) {
                     <li>
                         <a routerLink="/" [queryParams]="{Page: ($index + 1)}" [class]="{
-                                    'pointer-events-none': ($index + 1) === Blog()?.current_page,
-                                    'cursor-pointer': ($index + 1) !== Blog()?.current_page,
-                                    'hover:bg-gray-100': ($index + 1) !== Blog()?.current_page,
-                                    'hover:text-gray-700': ($index + 1) !== Blog()?.current_page,
-                                    'bg-blue-100': ($index + 1) === Blog()?.current_page,
-                                    'bg-white': ($index + 1) !== Blog()?.current_page,
-                                    'text-gray-500': ($index + 1) !== Blog()?.current_page,
-                                    'text-blue-600': ($index + 1) === Blog()?.current_page,
-                                }"
+                                        'pointer-events-none': ($index + 1) === Blog()?.current_page,
+                                        'cursor-pointer': ($index + 1) !== Blog()?.current_page,
+                                        'hover:bg-gray-100': ($index + 1) !== Blog()?.current_page,
+                                        'hover:text-gray-700': ($index + 1) !== Blog()?.current_page,
+                                        'bg-blue-100': ($index + 1) === Blog()?.current_page,
+                                        'bg-white': ($index + 1) !== Blog()?.current_page,
+                                        'text-gray-500': ($index + 1) !== Blog()?.current_page,
+                                        'text-blue-600': ($index + 1) === Blog()?.current_page,
+                                    }"
                             class="flex items-center justify-center px-4 h-10 leading-tight border border-gray-300">
                             {{ $index + 1}}
                         </a>
@@ -47,15 +48,15 @@
                     }
                     <li>
                         <a routerLink="/" [queryParams]="{Page: (Blog()?.current_page || 0 ) + 1}" [class]="{
-                                'pointer-events-none': Blog()?.next_page === null,
-                                'hover:bg-gray-100': Blog()?.next_page !== null,
-                                'hover:text-gray-700': Blog()?.next_page !== null,
-                                'cursor-pointer': Blog()?.next_page !== null,
-                                'bg-blue-100': Blog()?.next_page === null,
-                                'bg-white': Blog()?.next_page !== null,
-                                'text-blue-600': Blog()?.next_page === null,
-                                'text-gray-500': Blog()?.next_page !== null
-                            }"
+                                    'pointer-events-none': Blog()?.next_page === null,
+                                    'hover:bg-gray-100': Blog()?.next_page !== null,
+                                    'hover:text-gray-700': Blog()?.next_page !== null,
+                                    'cursor-pointer': Blog()?.next_page !== null,
+                                    'bg-blue-100': Blog()?.next_page === null,
+                                    'bg-white': Blog()?.next_page !== null,
+                                    'text-blue-600': Blog()?.next_page === null,
+                                    'text-gray-500': Blog()?.next_page !== null
+                                }"
                             class="flex items-center justify-center px-4 h-10 leading-tight border border-gray-300 rounded-e-lg">
                             >
                         </a>
@@ -64,6 +65,21 @@
             </div>
         </section>
     </div>
+    }@else {
+    <section class="w-screen p-10">
+        <div class="py-8 px-4 mx-auto">
+            <div class="mx-auto max-w-screen-sm text-center">
+                <h1 class="mb-4 text-7xl tracking-tight font-extrabold lg:text-9xl text-primary-600 ">404</h1>
+                <p class="mb-4 text-3xl tracking-tight font-bold text-gray-900 md:text-4xl ">Something's missing.</p>
+                <p class="mb-4 text-lg font-light text-gray-500 ">Sorry, we can't find that page. You'll find lots to
+                    explore on the home page. </p>
+                <a routerLink="/"
+                    class="inline-flex bg-blue-600 text-white hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blues-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center my-4">Back
+                    to Homepage</a>
+            </div>
+        </div>
+    </section>
+    }
     @if(user()){
     <a routerLink="/post-create"
         class="fixed cursor-pointer bottom-6 right-6 bg-white border-4 border-blue-500 text-blue-500 p-3 rounded-full shadow-2xl hover:bg-blue-100 transition-all">
@@ -74,10 +90,10 @@
     </a>
     }@else {
     <a routerLink="/login"
-    class="fixed cursor-pointer bottom-6 right-6 bg-white border-4 border-blue-500 text-blue-500 p-3 rounded-full shadow-2xl hover:bg-blue-100 transition-all"
-    >
+        class="fixed cursor-pointer bottom-6 right-6 bg-white border-4 border-blue-500 text-blue-500 p-3 rounded-full shadow-2xl hover:bg-blue-100 transition-all">
         <svg class="h-6 w-6" fill="none" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-            <path fill="#555" d="M9.76076555,0 C15.4157386,0 20,4.4771525 20,10 C20,15.5228475 15.4157386,20 9.76076555,20 C6.56885647,20 3.61836948,18.5634688 1.68988581,16.1544725 C1.46202241,15.8698333 1.51356853,15.4586837 1.80501731,15.2361442 C2.09646608,15.0136047 2.51745178,15.0639465 2.74531518,15.3485857 C4.4225344,17.443711 6.98554674,18.6915888 9.76076555,18.6915888 C14.6758356,18.6915888 18.6602871,14.8002319 18.6602871,10 C18.6602871,5.19976806 14.6758356,1.30841121 9.76076555,1.30841121 C7.02601512,1.30841121 4.49642844,2.51988396 2.81675903,4.5633425 C2.58516542,4.84509553 2.16355149,4.89014431 1.87505796,4.66396176 C1.58656443,4.43777922 1.54043793,4.02601608 1.77203154,3.74426305 C3.70333647,1.39466883 6.61544133,0 9.76076555,0 Z M10.3053281,6.86239745 L13.0119569,9.56902627 C13.2735521,9.83062149 13.2785069,10.2497964 13.0230237,10.5052795 L10.3796339,13.1486694 C10.1241507,13.4041526 9.70497582,13.3991978 9.4433806,13.1376026 C9.18178539,12.8760073 9.1768306,12.4568325 9.43231378,12.2013493 L10.98,10.6534046 L0.669856459,10.6542056 C0.299904952,10.6542056 7.72715225e-14,10.3613078 7.72715225e-14,10 C7.72715225e-14,9.63869222 0.299904952,9.34579439 0.669856459,9.34579439 L10.938,9.34540456 L9.38014161,7.78758389 C9.11854639,7.52598867 9.11359161,7.1068138 9.36907479,6.85133062 C9.62455797,6.59584744 10.0437328,6.60080223 10.3053281,6.86239745 Z"/>
+            <path fill="#555"
+                d="M9.76076555,0 C15.4157386,0 20,4.4771525 20,10 C20,15.5228475 15.4157386,20 9.76076555,20 C6.56885647,20 3.61836948,18.5634688 1.68988581,16.1544725 C1.46202241,15.8698333 1.51356853,15.4586837 1.80501731,15.2361442 C2.09646608,15.0136047 2.51745178,15.0639465 2.74531518,15.3485857 C4.4225344,17.443711 6.98554674,18.6915888 9.76076555,18.6915888 C14.6758356,18.6915888 18.6602871,14.8002319 18.6602871,10 C18.6602871,5.19976806 14.6758356,1.30841121 9.76076555,1.30841121 C7.02601512,1.30841121 4.49642844,2.51988396 2.81675903,4.5633425 C2.58516542,4.84509553 2.16355149,4.89014431 1.87505796,4.66396176 C1.58656443,4.43777922 1.54043793,4.02601608 1.77203154,3.74426305 C3.70333647,1.39466883 6.61544133,0 9.76076555,0 Z M10.3053281,6.86239745 L13.0119569,9.56902627 C13.2735521,9.83062149 13.2785069,10.2497964 13.0230237,10.5052795 L10.3796339,13.1486694 C10.1241507,13.4041526 9.70497582,13.3991978 9.4433806,13.1376026 C9.18178539,12.8760073 9.1768306,12.4568325 9.43231378,12.2013493 L10.98,10.6534046 L0.669856459,10.6542056 C0.299904952,10.6542056 7.72715225e-14,10.3613078 7.72715225e-14,10 C7.72715225e-14,9.63869222 0.299904952,9.34579439 0.669856459,9.34579439 L10.938,9.34540456 L9.38014161,7.78758389 C9.11854639,7.52598867 9.11359161,7.1068138 9.36907479,6.85133062 C9.62455797,6.59584744 10.0437328,6.60080223 10.3053281,6.86239745 Z" />
         </svg>
     </a>
     }

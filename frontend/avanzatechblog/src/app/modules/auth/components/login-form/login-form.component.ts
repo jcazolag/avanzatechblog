@@ -13,7 +13,6 @@ import { AuthService } from '@services/auth.service';
 export class LoginFormComponent {
   form: FormGroup;
 
-  status: RequestStatus = 'init';
   showPassword: boolean = false;
   message = signal<string>('');
 
@@ -36,21 +35,26 @@ export class LoginFormComponent {
 
   login() {
     if (this.form.valid) {
-      this.status = 'loading';
       const { email, password } = this.form.getRawValue();
       this.authService.login( email, password )
       .subscribe({
         next: (response) => {
-          this.status = 'success';
           this.router.navigate(['/']);
+          window.location.reload();
         },
         error: (err) => {
-          this.status = 'failed';
-          if (err.status === 401) {
-            this.message.set('Invalid email or password.');
+          if (err.status === 400) {
+            this.message.set(err.error.message);
+          }else if(err.status === 403){
+            this.message.set(err.error.message);
           } else if (err.status === 0) {
             this.message.set('Cannot connect to server.');
-          } else {
+          }else if(err.status === 409) {
+            this.message.set(err.error.message)
+          } else if(err.status === 401){
+            this.message.set(err.error.message)
+          }
+          else {
             this.message.set(`Error ${err.status}: ${err.statusText || 'Unknown error'}`);
           }
         }

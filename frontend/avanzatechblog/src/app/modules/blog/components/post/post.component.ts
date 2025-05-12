@@ -5,18 +5,19 @@ import { LikeService } from '@services/like.service';
 import { LikeResponse } from '@models/Like.models';
 import { CommentService } from '@services/comment.service';
 import { UserService } from '@services/user.service';
-import { Router } from '@angular/router';
 import { BlogService } from '@services/blog.service';
 import { User } from '@models/User.model';
+import { RouterLinkWithHref } from '@angular/router';
+import { PostsService } from '@services/posts.service';
 
 @Component({
   selector: 'app-post',
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLinkWithHref],
   templateUrl: './post.component.html',
   styleUrl: './post.component.css'
 })
 export class PostComponent {
-  @Input({required: true}) post!: Post;
+  @Input({ required: true }) post!: Post;
   likes: WritableSignal<LikeResponse | null> = signal<LikeResponse | null>(null)
   currentPage = 1;
   comments: WritableSignal<number> = signal<number>(0);
@@ -24,14 +25,14 @@ export class PostComponent {
   user = inject(UserService).user;
   liked: WritableSignal<boolean> = signal<boolean>(false);
   alert: boolean = false;
-  access_buttons: Signal<boolean> = computed( () => {
+  access_buttons: Signal<boolean> = computed(() => {
     const user: User | undefined = this.user();
     const post: Post = this.post;
 
-    if(!user) return false;
-    if(post.author_access !== "Read & Write") return false;
-    if(post.team_access !== "Read & Write" && post.author !== user.id) return false;
-    if(post.authenticated_access !== "Read & Write" && post.author_team !== user.team) return false;
+    if (!user) return false;
+    if (post.author_access !== "Read & Write") return false;
+    if (post.team_access !== "Read & Write" && post.author !== user.id) return false;
+    if (post.authenticated_access !== "Read & Write" && post.author_team !== user.team) return false;
 
     return true;
   });
@@ -42,73 +43,73 @@ export class PostComponent {
     private likeService: LikeService,
     private commentService: CommentService,
     private blogService: BlogService,
-    private router: Router
-  ){}
+    private postService: PostsService
+  ) { }
 
-  ngOnInit(){
+  ngOnInit() {
     this.getLikes();
     this.userLiked();
     this.getComments();
   }
 
-  toggleAlert(){
+  toggleAlert() {
     this.alert = !this.alert;
   }
 
-  userLiked(){
+  userLiked() {
     const user = this.user();
     const post = this.post;
-    if(user){
-      const response = this.likeService.userLikedPost(post.id, user.id);
-      if(response){
-        response.subscribe({
+    if (user) {
+      this.likeService.userLikedPost(post.id, user.id)
+        .subscribe({
           next: (res) => {
-            if(res){
+            if (res) {
               const result = res.results;
               result[0] ? this.liked.set(true) : this.liked.set(false);
             }
           },
-          error: (err) =>  {}
+          error: (err) => { }
         });
-      }
     }
   }
 
-  getComments(){
+  getComments() {
     this.commentService.getComments(this.post.id)
-    .subscribe({
-      next: (response) =>{
-        this.comments.set(response.total_count);
-      },
-      error: (err) => {}
-    });
+      .subscribe({
+        next: (response) => {
+          this.comments.set(response.total_count);
+        },
+        error: (err) => { }
+      });
   }
 
-  getLikes(page = this.currentPage){
+  getLikes(page = this.currentPage) {
     const likes = this.likes();
-    if(likes){
-      if(page > likes.total_pages) return;
+    if (likes) {
+      if (page > likes.total_pages) return;
     }
-    if(page < 1) return;
+    if (page < 1) return;
 
     this.likeService.getLikes(this.post.id, page)
-    .subscribe({
-      next: (response) =>{
-        if(response){
-          this.likes.set(response);
-          this.currentPage = page;
+      .subscribe({
+        next: (response) => {
+          if (response) {
+            this.likes.set(response);
+            this.currentPage = page;
+          }
+        },
+        error: (err) => {
+          console.log(err);
         }
-      },
-      error: (err) =>{}
-    });
+      });
   }
 
   likePost() {
     const userId = this.user()?.id;
     const likes = this.likes();
-  
+
     if (!userId || !likes || !likes.results) return;
-  
+
     if (this.liked()) {
       // Eliminar el like existente
       this.likeService.unlikePost(this.post.id).subscribe({
@@ -134,19 +135,10 @@ export class PostComponent {
     }
   }
 
-  deletePost(){
-    this.blogService.deleteBlog(this.post.id)
-    .subscribe({
-      next: () => {
-        window.location.reload();
-      },
-      error: (err) => {
-        console.log(err)
-      }
-    });
+  deletePost() {
+    this.postService.deletePost(this.post.id);
+    this.toggleAlert();
   }
-
-
 
   togglePopover(event: MouseEvent) {
     event.stopPropagation(); // Evita que el clic burbujee y lo cierre inmediatamente

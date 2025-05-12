@@ -29,6 +29,10 @@ export const routes: Routes = [
                 loadComponent: () => import('@modules/blog/pages/create-post/create-post.component')
             },
             {
+                path: 'post-detail/:post_id',
+                loadComponent: () => import('@modules/blog/pages/detail/detail.component')
+            },
+            {
                 path: '**',
                 loadComponent: () => import('@modules/layout/pages/not-found/not-found.component')
             }

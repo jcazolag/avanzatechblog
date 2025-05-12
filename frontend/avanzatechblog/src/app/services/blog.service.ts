@@ -23,17 +23,16 @@ export class BlogService {
     if(page){
       url.searchParams.set('page', page.toString());
     }
-    return this.http.get<Blog>(url.toString(), {
+    this.http.get<Blog>(url.toString(), {
       withCredentials: true
+    }).subscribe({
+      next: (response) =>{
+        this.Blog.set(response)
+      },
+      error: (err) => {
+        console.log(err)
+      }
     });
   }
 
-  deleteBlog(blog_id: number): Observable<Generic>{
-    const csrfToken = this.tokenService.getToken('csrftoken');
-    const headers = new HttpHeaders({
-      'X-CSRFToken': csrfToken || '',
-      'Content-Type': 'application/json',
-    });
-    return this.http.delete<Generic>(`${this.apiUrl}/api/blog/post/${blog_id}/`, {headers, withCredentials: true});
-  }
 }
