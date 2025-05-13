@@ -32,18 +32,22 @@ class CommentViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         user = request.user
         blog_id = kwargs.get('blog_id')  # Tomamos el blog_id desde la URL
-        blog = get_object_or_404(Blog, id=blog_id)
+        
+        if not Blog.objects.filter(pk=blog_id).exists():
+            return Response({"message": "No Blog matches the given query."}, status=status.HTTP_404_NOT_FOUND)
 
+        blog = Blog.objects.get(pk=blog_id)
         # Validar que el usuario tenga acceso al blog
         if not self._can_comment_blog(user, blog):
-            return Response({"detail": "You do not have permission to comment this blog."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "You do not have permission to comment this blog."}, status=status.HTTP_403_FORBIDDEN)
 
         data = {'blog': blog.id, 'content': request.data.get('content')}
-        serializer = self.get_serializer(data=data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
-        serializer.save(user=user)  # Asignar usuario al guardar
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer = self.get_serializer(data=data, context={'request': request})
+        if serializer.is_valid(raise_exception=False):
+            serializer.save(user=user)  # Asignar usuario al guardar
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response({"message": 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
     
     def list(self, request, *args, **kwargs):
         user = request.user
@@ -86,19 +90,19 @@ class CommentViewSet(viewsets.ModelViewSet):
         blog = comment.blog
         if self._can_comment_blog(user, blog) and comment.user == user:
             self.perform_destroy(comment)
-            return Response({"detail": "Blog removed successfully."},status=status.HTTP_204_NO_CONTENT)
-        return Response({'detail': 'You do not have permission to delete this comment.'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"message": "Blog removed successfully."},status=status.HTTP_204_NO_CONTENT)
+        return Response({'message': 'You do not have permission to delete this comment.'}, status=status.HTTP_403_FORBIDDEN)
     
     def retrieve(self, request, *args, **kwargs):
         comment = self.get_object()
         if not self._can_comment_blog(request.user, comment.blog) or comment.user != request.user:
-            return Response({'detail': 'You do not have access to this comment.'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'message': 'You do not have access to this comment.'}, status=status.HTTP_403_FORBIDDEN)
         return super().retrieve(request, *args, **kwargs)
     
     def update(self, request, *args, **kwargs):
         comment = self.get_object()
         if not self._can_comment_blog(request.user, comment.blog) or comment.user != request.user:
-            return Response({'detail': 'You do not have permission to modify this comment.'}, status=status.HTTP_403_FORBIDDEN)
+            return Response({'message': 'You do not have permission to modify this comment.'}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = self.get_serializer(comment, data=request.data, partial=False)
         serializer.is_valid(raise_exception=True)

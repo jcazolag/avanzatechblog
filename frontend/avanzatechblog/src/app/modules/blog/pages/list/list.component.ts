@@ -1,14 +1,16 @@
-import { Component, inject, Input, signal, SimpleChanges, WritableSignal } from '@angular/core';
+import { Component, effect, inject, Injector, Input, signal, SimpleChanges, WritableSignal } from '@angular/core';
 import { Blog } from '@models/Blog.model';
 import { PostComponent } from '@modules/blog/components/post/post.component';
 import { BlogService } from '@services/blog.service';
-import { Router, RouterLinkWithHref } from '@angular/router';
+import { RouterLinkWithHref } from '@angular/router';
 import { UserService } from '@services/user.service';
 import { User } from '@models/User.model';
+import { NotfoundComponent } from '@modules/blog/components/notfound/notfound.component';
+import { timer, Subscription, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-list',
-  imports: [PostComponent, RouterLinkWithHref],
+  imports: [PostComponent, RouterLinkWithHref, NotfoundComponent],
   templateUrl: './list.component.html',
   styleUrl: './list.component.css'
 })
@@ -18,6 +20,8 @@ export default class ListComponent {
   user: WritableSignal<User | undefined> = inject(UserService).user;
   @Input() Page?: number;
   hasError: WritableSignal<boolean> = signal(false);
+
+  injector = inject(Injector);
 
   constructor(
   ) { }
@@ -30,8 +34,14 @@ export default class ListComponent {
     this.getBlog();
   }
 
-  private getBlog() {
-    this.blogService.getBlog(this.Page);
+  getBlog() {
+    this.blogService.getBlog(this.Page).subscribe({
+      next: (response) =>{
+        this.hasError.set(false);
+      },
+      error: (err) => {
+        this.hasError.set(true);
+      }
+    });
   }
-
 }

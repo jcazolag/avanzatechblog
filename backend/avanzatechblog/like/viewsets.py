@@ -7,7 +7,7 @@ from .serializers import LikeSerializer
 from django.shortcuts import get_object_or_404
 
 class LikePagination(PageNumberPagination):
-    page_size = 1
+    page_size = 15
     page_size_query_param = 'page_size'
     max_page_size = 100
 

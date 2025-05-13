@@ -84,7 +84,6 @@ export class CreateFormComponent {
       this.postService.createPost(newPost)
         .subscribe({
           next: (response) => {
-            this.blogService.getBlog();
             this.router.navigate(['/post-detail', response.post?.id]);
           },
           error: (err) => {

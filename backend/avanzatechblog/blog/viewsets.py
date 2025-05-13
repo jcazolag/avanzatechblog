@@ -53,7 +53,7 @@ class BlogViewSet(viewsets.ModelViewSet):
             return Response({'message': 'Admins can not create blogs'}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
+        if serializer.is_valid(raise_exception=False):
             serializer.save()
             return Response({"message": "success", "post": serializer.data}, status=status.HTTP_201_CREATED)
         return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)

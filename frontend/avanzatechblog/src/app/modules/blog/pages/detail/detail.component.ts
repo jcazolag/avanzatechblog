@@ -8,12 +8,14 @@ import { LikeService } from '@services/like.service';
 import { LikeResponse } from '@models/Like.models';
 import { CommentService } from '@services/comment.service';
 import { BlogService } from '@services/blog.service';
-import { Router, RouterLinkWithHref } from '@angular/router';
-import { Comment, CommentResponse } from '@models/Comment.models';
+import { ActivatedRoute, Router, RouterLinkWithHref } from '@angular/router';
+import { CommentResponse } from '@models/Comment.models';
+import { CommentFormComponent } from '@modules/blog/components/comment-form/comment-form.component';
+import { CommentComponent } from '@modules/blog/components/comment/comment.component';
 
 @Component({
   selector: 'app-detail',
-  imports: [CommonModule, RouterLinkWithHref],
+  imports: [CommonModule, RouterLinkWithHref, CommentFormComponent, CommentComponent],
   templateUrl: './detail.component.html',
   styleUrl: './detail.component.css'
 })
@@ -40,6 +42,7 @@ export default class DetailComponent {
   likes: WritableSignal<LikeResponse | null> = signal<LikeResponse | null>(null);
   comments: WritableSignal<CommentResponse | null> = signal<CommentResponse | null>(null);
   popoverOpen: boolean = false;
+  private route = inject(ActivatedRoute);
 
   @ViewChild('popoverRef') popoverRef!: ElementRef;
 
@@ -48,11 +51,24 @@ export default class DetailComponent {
     private postService: PostsService,
     private likeService: LikeService,
     private commentService: CommentService,
-    private router: Router
+    private router: Router,
+    private blogService: BlogService
   ) { }
 
   ngOnInit() {
     this.getPost();
+    this.goToForm();
+  }
+
+  goToForm() {
+    this.route.fragment.subscribe(fragment => {
+      if (fragment) {
+        const element = document.getElementById(fragment);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    });
   }
 
   private getPost() {
@@ -118,16 +134,23 @@ export default class DetailComponent {
     }
   }
 
-  getComments() {
-    const post = this.post()
-    if (!post) return;
-    this.commentService.getComments(post.id)
-      .subscribe({
-        next: (response) => {
-          this.comments.set(response);
-        },
-        error: (err) => { }
-      });
+  getComments(page = this.currentMsgPage) {
+    const post = this.post();
+    if (post) {
+      const comments = this.comments();
+      if (comments) {
+        if (page > comments.total_pages) return;
+      }
+      if (page < 1) return;
+      this.commentService.getComments(post.id, page)
+        .subscribe({
+          next: (response) => {
+            this.currentMsgPage = page
+            this.comments.set(response);
+          },
+          error: (err) => { }
+        });
+    }
   }
 
   likePost() {
@@ -165,12 +188,16 @@ export default class DetailComponent {
   deletePost() {
     const post = this.post()
     if (!post) return;
-    this.postService.deletePost(post.id);
-    this.router.navigate(['/']);
-  }
-
-  commentPost(){
-    
+    this.postService.deletePost(post.id)
+      .subscribe({
+        next: (response) => {
+          this.router.navigate(['/']);
+        },
+        error: (err) => {
+          console.log(err)
+          alert("There was an error. Try again.")
+        }
+      });
   }
 
   togglePopover(event: MouseEvent) {

@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, HostListener, inject, Input, Signal, signal, ViewChild, WritableSignal } from '@angular/core';
+import { Component, computed, effect, ElementRef, EventEmitter, HostListener, inject, Input, Output, Signal, signal, ViewChild, WritableSignal } from '@angular/core';
 import { Post } from '@models/Post.model';
 import { CommonModule } from '@angular/common';
 import { LikeService } from '@services/like.service';
@@ -18,6 +18,7 @@ import { PostsService } from '@services/posts.service';
 })
 export class PostComponent {
   @Input({ required: true }) post!: Post;
+  @Output() getBlog = new EventEmitter();
   likes: WritableSignal<LikeResponse | null> = signal<LikeResponse | null>(null)
   currentPage = 1;
   comments: WritableSignal<number> = signal<number>(0);
@@ -136,12 +137,20 @@ export class PostComponent {
   }
 
   deletePost() {
-    this.postService.deletePost(this.post.id);
+    this.postService.deletePost(this.post.id)
+    .subscribe({
+      next: (response) => {
+        this.getBlog.emit();
+      },
+      error: (err) =>{
+        console.log(err)
+      }
+    });
     this.toggleAlert();
   }
 
   togglePopover(event: MouseEvent) {
-    event.stopPropagation(); // Evita que el clic burbujee y lo cierre inmediatamente
+    event.stopPropagation();
     this.popoverOpen = !this.popoverOpen;
   }
 

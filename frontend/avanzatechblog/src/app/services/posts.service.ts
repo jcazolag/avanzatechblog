@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '@environment/environment';
 import { NewPost, Post, PostResponse } from '@models/Post.model';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { TokenService } from './token.service';
 import { BlogService } from './blog.service';
 import { Generic } from '@models/generic.model';
@@ -28,7 +28,7 @@ export class PostsService {
     return this.http.post<PostResponse>(`${this.apiUrl}/api/blog/post/`, post, { headers, withCredentials: true });
   }
 
-  getPost(post_id: number) {
+  getPost(post_id: number): Observable<Post> {
     const csrfToken = this.tokenService.getToken('csrftoken');
     const headers = new HttpHeaders({
       'X-CSRFToken': csrfToken || '',
@@ -37,20 +37,12 @@ export class PostsService {
     return this.http.get<Post>(`${this.apiUrl}/api/blog/post/${post_id}`, { headers, withCredentials: true });
   }
 
-  deletePost(blog_id: number) {
+  deletePost(blog_id: number): Observable<Generic> {
     const csrfToken = this.tokenService.getToken('csrftoken');
     const headers = new HttpHeaders({
       'X-CSRFToken': csrfToken || '',
       'Content-Type': 'application/json',
     });
-    this.http.delete<Generic>(`${this.apiUrl}/api/blog/post/${blog_id}/`, { headers, withCredentials: true })
-    .subscribe({
-      next: (response) => {
-        this.blogService.getBlog();
-      },
-      error: (err) =>{
-        console.log(err)
-      }
-    });
+    return this.http.delete<Generic>(`${this.apiUrl}/api/blog/post/${blog_id}/`, { headers, withCredentials: true });
   }
 }

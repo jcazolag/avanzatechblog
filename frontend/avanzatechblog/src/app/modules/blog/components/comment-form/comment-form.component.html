@@ -1,0 +1,19 @@
+<div class="my-5 shadow bg-neutral-50">
+    <form [formGroup]="form" (ngSubmit)="commentPost()" class="border p-2 pt-3" >
+        <div>
+            <textarea class="w-full border p-2 mt-2 min-h-25" name="content" id="content" formControlName="content"
+                placeholder="Leave your comment"></textarea>
+        </div>
+        <div class="text-center sm:text-right overflow-auto">
+            <button type="submit"
+                class="rounded-md border-black text-white bg-blue-700 hover:bg-blue-600 py-2 px-6 mt-2 cursor-pointer">
+                Comment
+            </button>
+        </div>
+        @if (message()) {
+            <div class="text-center my-2">
+                {{message()}}
+            </div>
+        }
+    </form>
+</div>

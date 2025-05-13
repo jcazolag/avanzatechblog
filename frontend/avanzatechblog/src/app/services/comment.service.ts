@@ -1,8 +1,9 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '@environment/environment';
-import { CommentResponse } from '@models/Comment.models';
+import { Comment, CommentResponse } from '@models/Comment.models';
 import { Observable } from 'rxjs';
+import { TokenService } from './token.service';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,8 @@ export class CommentService {
   apiUrl: string = environment.API_URL;
 
   constructor(
-    private http: HttpClient
+    private http: HttpClient,
+    private tokenService: TokenService
   ) { }
 
   getComments(blog_id?: number, page?: number): Observable<CommentResponse>{
@@ -25,5 +27,14 @@ export class CommentService {
         }
     
         return this.http.get<CommentResponse>(url.toString(), { withCredentials: true});
+  }
+
+  commentPost(post_id: number, content: string): Observable<Comment> {
+    const csrfToken = this.tokenService.getToken('csrftoken');
+    const headers = new HttpHeaders({
+      'X-CSRFToken': csrfToken || '',
+      'Content-Type': 'application/json',
+    });
+    return this.http.post<Comment>(`${this.apiUrl}/api/comment/post/${post_id}/`, content, {headers, withCredentials: true});
   }
 }

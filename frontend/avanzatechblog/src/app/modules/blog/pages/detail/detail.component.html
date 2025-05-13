@@ -2,17 +2,17 @@
     @if(!hasError()){
     <div class="container mx-auto ">
         <section class="py-8 h-[calc(100dvh-4rem)] min-h-min w-full">
-            <div class="border rounded-2xl h-full mx-4 shadow-2xl bg-white p-10 pt-6 min-h-min">
+            <div class="h-full mx-4 shadow bg-white p-10 pt-6 min-h-min">
                 <!--User Info-->
                 <div
-                    class="flex flex-wrap items-start md:items-center space-x-4 md:space-x-8 space-y-2 md:space-y-0 border-b pb-1">
-                    <button class="rounded-2xl border bg-neutral-100 px-3 py-1 text-xs font-semibold">Team: {{
+                    class="flex flex-wrap items-start md:items-center space-x-2 md:space-x-8 space-y-2 md:space-y-0 border-b pb-1">
+                    <button class="rounded border bg-neutral-100 px-3 py-1 text-xs font-semibold">Team: {{
                         post()?.author_team_title }}</button>
-                    <div class="text-sm text-neutral-800">{{ post()?.author_name }}</div>
+                    <div class="text-sm font-semibold py-1 text-neutral-800">{{ post()?.author_name }}</div>
                     <div class="text-sm text-neutral-500">{{ post()?.timestamp | date: 'dd/MM/yyyy HH:mm:ss' }}</div>
                 </div>
                 <!--Title-->
-                <div class="pb-4 pt-2 overflow-auto text-center">
+                <div class="py-2 overflow-auto">
                     <h1 class="text-2xl font-bold">{{post()?.title}}</h1>
                 </div>
                 <!--Content-->
@@ -23,7 +23,7 @@
                 </div>
                 <!--Post Info-->
                 <div
-                    class="flex flex-col md:flex-row md:items-center md:justify-between text-slate-500 space-y-4 md:space-y-0 border-b pb-4 px-4">
+                    class="flex flex-col md:flex-row md:items-center md:justify-between text-slate-500 space-y-4 md:space-y-0  px-4">
                     <!-- Sección izquierda (comentarios y likes) -->
                     <div class="flex flex-wrap items-center justify-start gap-4 md:gap-8">
                         <!-- Comments -->
@@ -158,44 +158,29 @@
                                 </div>
                             </div>
                         </div>
-
                         }
                     </div>
                     }
                 </div>
                 <!--Comments-->
                 <div class="">
-                    <div class="m-5">
+                    <div class="mb-5 mt-2">
                         <h2 class="text-center font-bold text-xl">Comments</h2>
                     </div>
-                    <div class="m-5 shadow-md bg-neutral-200">
-                        <form action="" class="border rounded-md p-4">
-                            <div>
-                                <label for="comment" class="font-bold">
-                                    Comment
-                                </label>
-                                <textarea class="w-full border p-2 min-h-25" name="comment" id="comment"
-                                    placeholder="Leave your comment"></textarea>
-                            </div>
-                            <div class="m-2 text-right">
-                                <button type="submit" class="rounded-md border-black text-white bg-blue-700 hover:bg-blue-600 p-2 cursor-pointer">
-                                    Comment
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                    <hr>
-                    @for (comment of comments()?.results; track $index) {
-                    <div class="border rounded">
-                        <div>
-                            <h3>{{comment.user_name}}</h3>
+                    <!--Comment Form-->
+                    @if (user()) {
+                        <app-comment-form id="comment-form" [post_id]="post_id" (getComments)="getComments()" />
+                    }@else {
+                        <div class="text-center my-4 border-b pb-4">
+                            To leave a comment, please <a routerLink="/login" class="text-blue-700 hover:underline">Log In</a>
                         </div>
-                        <div>
-                            <textarea readonly>{{comment.content}}</textarea>
-                        </div>
-                    </div>
+                    }
+                    
+                    @for (comment of comments()?.results; track comment.id) {
+                    <app-comment [comment]="comment" />
                     }@empty {
-                    <div class="text-center my-5">
+                    <hr class="my-4">
+                    <div class="text-center">
                         <p>There are no comments</p>
                         <p>Be the first one to comment</p>
                     </div>

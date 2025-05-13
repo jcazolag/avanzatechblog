@@ -28,14 +28,14 @@ class CommentSerializer(serializers.ModelSerializer):
         user = request.user if request else None
         blog_id = self.initial_data.get('blog')  # Evita errores si 'blog' no está en el request
         if not blog_id:
-            raise serializers.ValidationError({"blog": "This field is required."})
+            raise serializers.ValidationError("This field is required.")
 
         blog = Blog.objects.filter(id=blog_id).first()
         if not blog:
-            raise serializers.ValidationError({"blog": "Invalid blog ID."})
+            raise serializers.ValidationError("Invalid blog ID.")
 
         if not can_view_blog(user, blog):
-            raise serializers.ValidationError({"detail": "You do not have permission to comment on this blog."})
+            raise serializers.ValidationError("You do not have permission to comment on this blog.")
 
         data['blog'] = blog  # Asigna la instancia del blog validado
         return data

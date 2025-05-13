@@ -16,11 +16,12 @@
         <!-- Desktop Menu -->
         <nav class="hidden md:flex space-x-4 items-center">
             @if (user()) {
-            <span class="text-sm text-gray-700">{{ user()?.email }}</span>
+            <span class="text-sm font-semibold text-gray-700">{{ user()?.email }}</span>
+            <span>|</span>
             <button (click)="logout()" class="text-blue-600 hover:text-neutral-600 cursor-pointer">
                 <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M13.5 7.5L10.5 10.75M13.5 7.5L10.5 4.5M13.5 7.5L4 7.5M8 13.5H1.5L1.5 1.5L8 1.5" stroke="currentColor"/>
-                    </svg>
+                </svg>
             </button>
             } @else {
             <a routerLink="/login" class="text-blue-600 hover:underline">Login</a>
@@ -31,9 +32,9 @@
 
     <!-- Mobile Menu -->
     @if (menu()) {
-        <div class="md:hidden px-4 pb-4 space-y-2">
+        <div class="md:hidden px-4 py-4 space-y-2 border-t">
             @if (user()) {
-            <p class="text-sm text-gray-700">{{ user()?.email }}</p>
+            <p class="text-sm text-gray-700 font-semibold">{{ user()?.email }}</p>
             <button (click)="logout()" class="block text-blue-600 hover:text-neutral-600 cursor-pointer" >
                 <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M13.5 7.5L10.5 10.75M13.5 7.5L10.5 4.5M13.5 7.5L4 7.5M8 13.5H1.5L1.5 1.5L8 1.5" stroke="currentColor"/>

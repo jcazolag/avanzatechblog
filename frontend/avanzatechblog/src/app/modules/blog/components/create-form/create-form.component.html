@@ -1,5 +1,5 @@
-<div class="border rounded-2xl p-4 pb-8 shadow-2xl">
-    <h1 class="text-center font-bold py-2 text-gray-700 text-2xl">Create Post</h1>
+<div class="p-4 shadow-2xl">
+    <h1 class="text-center font-bold py-1 text-gray-700 text-2xl">Create Post</h1>
     <form [formGroup]="form" novalidate class="space-y-4 mt-4" (ngSubmit)="createPost()">
         <!-- title -->
         <div>
@@ -26,7 +26,7 @@
                 <label for="content">
                     Content
                     <textarea formControlName="content" placeholder="" name="content"
-                        class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5" >
+                        class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 min-h-30" >
                     </textarea>
                 </label>
             </div>
@@ -37,7 +37,10 @@
             }
         </div>
 
-        <div>
+        <div class="bg-neutral-50 rounded border p-4">
+            <div class="text-center">
+                <p class="font-bold text-lg">Permissions</p>
+            </div>
             <div class="grid grid-cols-1 gap-5">
 
             <!-- Author Access -->

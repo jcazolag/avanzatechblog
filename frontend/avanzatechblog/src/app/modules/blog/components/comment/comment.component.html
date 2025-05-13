@@ -1,0 +1,11 @@
+<div class="shadow p-4 mb-1 border">
+    <div class="text-lg font-bold w-full overflow-auto">{{comment.user_name}}</div>
+    <div class="w-full">
+        <p class="text-sm overflow-auto text-justify p-2">
+            {{comment.content}}
+        </p>
+    </div>
+    <div class="w-full">
+        <span class="text-xs text-gray-500">{{comment.timestamp | date: 'dd/MM/yyyy HH:mm:ss' }}</span>
+    </div>
+</div>
