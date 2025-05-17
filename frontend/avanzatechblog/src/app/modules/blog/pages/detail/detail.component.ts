@@ -1,4 +1,4 @@
-import { Component, Input, signal, WritableSignal, inject, Signal, computed, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, signal, WritableSignal, inject, Signal, computed } from '@angular/core';
 import { Post } from '@models/Post.model';
 import { User } from '@models/User.model';
 import { PostsService } from '@services/posts.service';
@@ -7,68 +7,91 @@ import { CommonModule } from '@angular/common';
 import { LikeService } from '@services/like.service';
 import { LikeResponse } from '@models/Like.models';
 import { CommentService } from '@services/comment.service';
-import { BlogService } from '@services/blog.service';
-import { ActivatedRoute, Router, RouterLinkWithHref } from '@angular/router';
+import {  Router, RouterLinkWithHref } from '@angular/router';
 import { CommentResponse } from '@models/Comment.models';
 import { CommentFormComponent } from '@modules/blog/components/comment-form/comment-form.component';
 import { CommentComponent } from '@modules/blog/components/comment/comment.component';
+import { LikePaginatorComponent } from '@modules/shared/components/like-paginator/like-paginator.component';
+import { CommentsCountComponent } from '@modules/shared/components/comments-count/comments-count.component';
+import { NotfoundComponent } from '@modules/shared/notfound/notfound.component';
+import { EditButtonComponent } from '@modules/shared/components/edit-button/edit-button.component';
+import { DeleteButtonComponent } from '@modules/shared/components/delete-button/delete-button.component';
+import { LikeButtonComponent } from '@modules/shared/components/like-button/like-button.component';
+import { PageStatus } from '@models/request-status.models';
+import { ServerErrorComponent } from '@modules/shared/server-error/server-error.component';
+import { LoadingScreenComponent } from '@modules/shared/loading-screen/loading-screen.component';
+import { AccessDeniedComponent } from '@modules/shared/access-denied/access-denied.component';
+import { DetailContentComponent } from '@modules/blog/components/detail-content/detail-content.component';
 
 @Component({
   selector: 'app-detail',
-  imports: [CommonModule, RouterLinkWithHref, CommentFormComponent, CommentComponent],
+  imports: [
+    CommonModule,
+    RouterLinkWithHref,
+    DetailContentComponent,
+    CommentFormComponent,
+    CommentComponent,
+    LikePaginatorComponent,
+    CommentsCountComponent,
+    NotfoundComponent,
+    ServerErrorComponent,
+    AccessDeniedComponent,
+    LoadingScreenComponent,
+    EditButtonComponent,
+    DeleteButtonComponent,
+    LikeButtonComponent
+  ],
   templateUrl: './detail.component.html',
   styleUrl: './detail.component.css'
 })
 export default class DetailComponent {
   @Input({ required: true }) post_id!: number;
+  status: WritableSignal<PageStatus> = signal<PageStatus>('loading');
   post: WritableSignal<Post | null> = signal<Post | null>(null);
   user = inject(UserService).user;
   liked: WritableSignal<boolean> = signal<boolean>(false);
-  alert: boolean = false;
+  likes: WritableSignal<LikeResponse | null> = signal<LikeResponse | null>(null);
+  currentLikePage = 1;
+  comments: WritableSignal<CommentResponse | null> = signal<CommentResponse | null>(null);
+  currentMsgPage = 1;
+  edit: WritableSignal<boolean> = signal<boolean>(false);
   access_buttons: Signal<boolean> = computed(() => {
     const user: User | undefined = this.user();
     const post: Post | null = this.post();
 
-    if (!user || !post) return false;
-    if (post.author_access !== "Read & Write") return false;
-    if (post.team_access !== "Read & Write" && post.author !== user.id) return false;
-    if (post.authenticated_access !== "Read & Write" && post.author_team !== user.team) return false;
+    if (
+      (!user || !post) ||
+      (post.author_access !== "Read & Write") ||
+      (post.team_access !== "Read & Write" && post.author !== user.id) ||
+      (post.authenticated_access !== "Read & Write" && post.author_team !== user.team)
+    ) return false;
 
     return true;
   });
-  hasError: WritableSignal<boolean> = signal(false);
-  currentLikePage = 1;
-  currentMsgPage = 1;
-  likes: WritableSignal<LikeResponse | null> = signal<LikeResponse | null>(null);
-  comments: WritableSignal<CommentResponse | null> = signal<CommentResponse | null>(null);
-  popoverOpen: boolean = false;
-  private route = inject(ActivatedRoute);
-
-  @ViewChild('popoverRef') popoverRef!: ElementRef;
-
+  paginate: Signal<boolean> = computed(() => {
+    const comments = this.comments();
+    if (comments) {
+      const result = comments.results;
+      if (result) {
+        return result.length > 0 ? true : false;
+      }
+    }
+    return false;
+  })
 
   constructor(
     private postService: PostsService,
     private likeService: LikeService,
     private commentService: CommentService,
     private router: Router,
-    private blogService: BlogService
   ) { }
 
   ngOnInit() {
     this.getPost();
-    this.goToForm();
   }
 
-  goToForm() {
-    this.route.fragment.subscribe(fragment => {
-      if (fragment) {
-        const element = document.getElementById(fragment);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
-    });
+  toggleEdit(){
+    this.edit.set(!this.edit())
   }
 
   private getPost() {
@@ -77,20 +100,24 @@ export default class DetailComponent {
         .subscribe({
           next: (response) => {
             this.post.set(response);
-            this.hasError.set(false);
+            this.status.set('success');
             this.getLikes();
             this.userLiked();
             this.getComments();
           },
           error: (err) => {
-            this.hasError.set(true);
+            console.log(err)
+            if(err.status === 404){
+              this.status.set('404');
+            }else if(err.status === 401){
+              this.status.set('401');
+            }
+            else{
+              this.status.set('500')
+            }
           }
         });
     }
-  }
-
-  toggleAlert() {
-    this.alert = !this.alert;
   }
 
   getLikes(page = this.currentLikePage) {
@@ -121,15 +148,16 @@ export default class DetailComponent {
     const user = this.user();
     const post = this.post();
     if (user && post) {
-      this.likeService.userLikedPost(post.id, user.id)
+      this.likeService.userLikedPost(post.id)
         .subscribe({
           next: (res) => {
             if (res) {
-              const result = res.results;
-              result[0] ? this.liked.set(true) : this.liked.set(false);
+              this.liked.set(true);
             }
           },
-          error: (err) => { }
+          error: (err) => { 
+            this.liked.set(false)
+          }
         });
     }
   }
@@ -200,15 +228,4 @@ export default class DetailComponent {
       });
   }
 
-  togglePopover(event: MouseEvent) {
-    event.stopPropagation(); // Evita que el clic burbujee y lo cierre inmediatamente
-    this.popoverOpen = !this.popoverOpen;
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent) {
-    if (!this.popoverRef?.nativeElement.contains(event.target)) {
-      this.popoverOpen = false;
-    }
-  }
 }

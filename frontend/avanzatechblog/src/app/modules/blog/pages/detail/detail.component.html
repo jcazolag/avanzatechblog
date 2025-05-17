@@ -1,163 +1,30 @@
-<main class="w-full h-[calc(100dvh-3.5rem)] min-h-min bg-gray-50">
-    @if(!hasError()){
-    <div class="container mx-auto ">
-        <section class="py-8 h-[calc(100dvh-4rem)] min-h-min w-full">
-            <div class="h-full mx-4 shadow bg-white p-10 pt-6 min-h-min">
-                <!--User Info-->
-                <div
-                    class="flex flex-wrap items-start md:items-center space-x-2 md:space-x-8 space-y-2 md:space-y-0 border-b pb-1">
-                    <button class="rounded border bg-neutral-100 px-3 py-1 text-xs font-semibold">Team: {{
-                        post()?.author_team_title }}</button>
-                    <div class="text-sm font-semibold py-1 text-neutral-800">{{ post()?.author_name }}</div>
-                    <div class="text-sm text-neutral-500">{{ post()?.timestamp | date: 'dd/MM/yyyy HH:mm:ss' }}</div>
-                </div>
-                <!--Title-->
-                <div class="py-2 overflow-auto">
-                    <h1 class="text-2xl font-bold">{{post()?.title}}</h1>
-                </div>
-                <!--Content-->
-                <div class="min-h-min py-4">
-                    <textarea readonly
-                        class="w-full border rounded p-5 focus:ring-blue-500 focus:border-blue-500 min-h-96"
-                        rows="10 block">{{post()?.content}}</textarea>
-                </div>
+@if(status() === 'success'){
+<div class="container mx-auto">
+    <section class="py-8 px-2 min-h-min h-[calc(100dvh-4rem)]">
+        <div class="h-full mx-4 shadow bg-white p-10 pt-6 min-h-min">
+            <app-detail-content [post]="post" [edit]="edit" />
+            @if (!edit()) {
                 <!--Post Info-->
                 <div
                     class="flex flex-col md:flex-row md:items-center md:justify-between text-slate-500 space-y-4 md:space-y-0  px-4">
                     <!-- Sección izquierda (comentarios y likes) -->
-                    <div class="flex flex-wrap items-center justify-start gap-4 md:gap-8">
+                    <div class="flex flex-wrap justify-start gap-4 md:gap-8">
                         <!-- Comments -->
-                        <div class="flex cursor-pointer items-center transition hover:text-blue-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="mr-1.5 h-5 w-5" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                            </svg>
-                            <span>{{ comments()?.total_count }}</span>
-                        </div>
-
+                        <app-comments-count [commentsCount]="comments()?.total_count || 0" />
                         <!-- Likes -->
-                        <div class="relative group inline-block" #popoverRef>
-                            <div (click)="togglePopover($event)"
-                                class="flex cursor-pointer items-center transition hover:text-blue-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="mr-1.5 h-5 w-5" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-                                </svg>
-                                <span>{{ likes()?.total_count || 0}}</span>
-                            </div>
-
-                            <!-- Popover -->
-                            @if(popoverOpen){
-                            <div
-                                class="absolute left-1/2 top-full z-10 mt-2 w-64 -translate-x-1/2 rounded-xl border border-gray-300 bg-white p-3 text-sm shadow-lg">
-                                <div
-                                    class="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-white border-l border-t border-gray-300">
-                                </div>
-                                <ul class="space-y-1 text-center font-medium m-2">
-                                    @for (like of likes()?.results; track $index) {
-                                    <li>{{ like.user_name }}</li>
-                                    }
-                                </ul>
-                                <hr>
-                                <div class="flex items-center justify-between mt-2 text-xs text-gray-500">
-                                    <button (click)="getLikes(currentLikePage - 1)"
-                                        [class.disabled]="!likes()?.previous_page" [class]="{
-                                        'hover:bg-gray-200': likes()?.previous_page,
-                                        'cursor-pointer': likes()?.previous_page
-                                    }" class="px-2 py-1 rounded border bg-gray-100 ">
-                                        < </button>
-                                            <span>Page {{ currentLikePage }} of {{likes()?.total_pages}}</span>
-                                            <button (click)="getLikes(currentLikePage + 1)"
-                                                [class.disabled]="!likes()?.next_page" [class]="{
-                                        'hover:bg-gray-200': likes()?.next_page,
-                                        'cursor-pointer': likes()?.next_page
-                                    }" class="px-2 py-1 rounded border bg-gray-100 disabled:opacity-50">
-                                                >
-                                            </button>
-                                </div>
-                            </div>
-                            }
-                        </div>
+                        <app-like-paginator [likes]="likes" [currentPage]="currentLikePage"
+                            (getLikesEmmitter)="getLikes($event)" />
                     </div>
-
                     <!-- Sección derecha (acciones del usuario) -->
                     @if (user()) {
                     <div class="flex justify-start md:justify-end gap-4 text-neutral-400 hover:text-gray-800">
                         <!-- Like -->
-                        <button class="hover:text-pink-500 transition cursor-pointer" (click)="likePost()" [class]="
-                            {
-                                'text-rose-500': liked()
-                            }
-                        ">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="currentColor"
-                                viewBox="0 0 24 24">
-                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 
-                                2 6.5 3.5 5 5.5 5c1.54 0 3.04.99 
-                                3.57 2.36h1.87C13.46 5.99 14.96 5 
-                                16.5 5 18.5 5 20 6.5 20 
-                                8.5c0 3.78-3.4 6.86-8.55 
-                                11.54L12 21.35z" />
-                            </svg>
-                        </button>
-
+                        <app-like-button [liked]="liked()" (like)="likePost()" />
                         @if(access_buttons()){
                         <!-- Edit -->
-                        <button class="hover:text-amber-500 transition cursor-pointer">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
-                                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-                            </svg>
-                        </button>
-
+                        <app-edit-button (action)="toggleEdit()" />
                         <!-- Delete -->
-                        <button class="hover:text-red-500 transition cursor-pointer" (click)="toggleAlert()">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor" stroke-width="2">
-                                <path
-                                    d="M3 6H21M5 6V20C5 21.1046 5.89543 22 7 22H17C18.1046 22 19 21.1046 19 20V6M8 6V4C8 2.89543 8.89543 2 10 2H14C15.1046 2 16 2.89543 16 4V6"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M14 11V17" stroke-linecap="round" stroke-linejoin="round" />
-                                <path d="M10 11V17" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </button>
-
-                        <!--Delete alert-->
-                        <div id="popup-modal" tabindex="-1" [class.hidden]="!alert"
-                            class="fixed inset-0 z-50 flex justify-center items-center overflow-y-auto overflow-x-hidden w-full h-full">
-                            <div class="relative p-4 w-full max-w-md max-h-full">
-                                <div class="relative bg-white rounded-lg shadow-sm border">
-                                    <button (click)="toggleAlert()" type="button"
-                                        class="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
-                                        data-modal-hide="popup-modal">
-                                        <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
-                                            fill="none" viewBox="0 0 14 14">
-                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                                stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                                        </svg>
-                                        <span class="sr-only">Close modal</span>
-                                    </button>
-                                    <div class="p-4 md:p-5 text-center">
-                                        <svg class="mx-auto mb-4 text-gray-400 w-12 h-12" aria-hidden="true"
-                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-                                        <h3 class="mb-5 text-lg font-normal text-gray-500">You are about to delete the
-                                            next post: {{post()?.title}}</h3>
-                                        <button (click)="deletePost()" data-modal-hide="popup-modal" type="button"
-                                            class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
-                                            Delete
-                                        </button>
-                                        <button (click)="toggleAlert()" data-modal-hide="popup-modal" type="button"
-                                            class="py-2.5 px-5 ms-3 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 ">Cancel</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <app-delete-button [title]="'Are you sure you want to delete this post?'" (action)="deletePost()" />
                         }
                     </div>
                     }
@@ -169,13 +36,12 @@
                     </div>
                     <!--Comment Form-->
                     @if (user()) {
-                        <app-comment-form id="comment-form" [post_id]="post_id" (getComments)="getComments()" />
+                    <app-comment-form id="comment-form" [post_id]="post_id" (getComments)="getComments()" />
                     }@else {
-                        <div class="text-center my-4 border-b pb-4">
-                            To leave a comment, please <a routerLink="/login" class="text-blue-700 hover:underline">Log In</a>
-                        </div>
+                    <div class="text-center my-4 border-b pb-4">
+                        To leave a comment, please <a routerLink="/login" class="text-blue-700 hover:underline">Log In</a>
+                    </div>
                     }
-                    
                     @for (comment of comments()?.results; track comment.id) {
                     <app-comment [comment]="comment" />
                     }@empty {
@@ -185,23 +51,62 @@
                         <p>Be the first one to comment</p>
                     </div>
                     }
+                    @if (paginate()) {
+                    <div class="mt-6 flex justify-center">
+                        <nav aria-label="Comments Pagination">
+                            <ul class="inline-flex items-center -space-x-px text-sm">
+                                <li>
+                                    <button (click)="getComments(currentMsgPage - 1)" [class]="{
+                                            'pointer-events-none text-gray-400': comments()?.previous_page === null,
+                                            'bg-white hover:bg-gray-100 text-gray-500': comments()?.previous_page !== null,
+                                            'cursor-pointer': comments()?.previous_page !== null
+                                        }"
+                                        class="flex items-center justify-center px-3 h-8 leading-tight border border-gray-300 rounded-l-lg">
+                                        <span class="sr-only">Previous</span>
+                                        <svg class="w-3 h-3 rtl:rotate-180" aria-hidden="true"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 8 14">
+                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                                stroke-width="2" d="M7 1 1.3 6.326a.91.91 0 0 0 0 1.348L7 13" />
+                                        </svg>
+                                    </button>
+                                </li>
+                                <li>
+                                    <span
+                                        class="flex items-center justify-center px-4 h-8 text-gray-500 border border-gray-300">
+                                        {{ comments()?.current_page || 1 }} of {{ comments()?.total_pages || 1 }}
+                                    </span>
+                                </li>
+                                <li>
+                                    <button (click)="getComments(currentMsgPage + 1)" [class]="{
+                                            'pointer-events-none text-gray-400': comments()?.next_page === null,
+                                            'bg-white hover:bg-gray-100 text-gray-500': comments()?.next_page !== null,
+                                            'cursor-pointer': comments()?.next_page !== null
+                                        }"
+                                        class="flex items-center justify-center px-3 h-8 leading-tight border border-gray-300 rounded-r-lg">
+                                        <span class="sr-only">Next</span>
+                                        <svg class="w-3 h-3 rtl:rotate-180" aria-hidden="true"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 8 14">
+                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                                stroke-width="2" d="m1 13 5.7-6.326a.91.91 0 0 0 0-1.348L1 1" />
+                                        </svg>
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                    }
                 </div>
-            </div>
-        </section>
-    </div>
-    }@else {
-    <section class="w-screen p-10">
-        <div class="py-8 px-4 mx-auto">
-            <div class="mx-auto max-w-screen-sm text-center">
-                <h1 class="mb-4 text-7xl tracking-tight font-extrabold lg:text-9xl text-primary-600 ">404</h1>
-                <p class="mb-4 text-3xl tracking-tight font-bold text-gray-900 md:text-4xl ">Something's missing.</p>
-                <p class="mb-4 text-lg font-light text-gray-500 ">Sorry, we can't find that page. You'll find lots to
-                    explore on the home page. </p>
-                <a routerLink="/"
-                    class="inline-flex bg-blue-600 text-white hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blues-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center my-4">Back
-                    to Homepage</a>
-            </div>
+            }
         </div>
     </section>
-    }
-</main>
+</div>
+}@else if(status() === '404') {
+<app-notfound />
+}@else if(status() === '500') {
+<app-server-error />
+}@else if (status() === '401') {
+<app-access-denied />
+}
+@else {
+<app-loading-screen />
+}

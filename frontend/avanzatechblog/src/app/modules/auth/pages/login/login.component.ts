@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { RouterLinkWithHref } from '@angular/router';
 import { LoginFormComponent } from '@modules/auth/components/login-form/login-form.component';
 
@@ -9,5 +9,6 @@ import { LoginFormComponent } from '@modules/auth/components/login-form/login-fo
   styleUrl: './login.component.css'
 })
 export default class LoginComponent {
-  
+  @Input() email: string = ''
+  @Input() next: string = '/post/71/'
 }

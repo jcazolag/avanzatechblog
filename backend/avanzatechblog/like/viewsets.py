@@ -4,7 +4,7 @@ from rest_framework.pagination import PageNumberPagination
 from .models import Like
 from blog.models import Blog
 from .serializers import LikeSerializer
-from django.shortcuts import get_object_or_404
+from blog.data.functions import can_view_blog, can_interact_blog
 
 class LikePagination(PageNumberPagination):
     page_size = 15
@@ -31,20 +31,23 @@ class LikeViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         user = request.user
         blog_id = kwargs.get('blog_id')  # Tomamos el blog_id desde la URL
-        blog = get_object_or_404(Blog, id=blog_id)
+        if not Blog.objects.filter(pk=blog_id).exists():
+            return Response({"message": "No blog matches the query."}, status=status.HTTP_404_NOT_FOUND)
+        blog = Blog.objects.get(pk=blog_id)
 
         # Validar que el usuario tenga acceso al blog
-        if not self._can_like_blog(user, blog):
+        if not can_interact_blog(user, blog):
             return Response({"message": "You do not have permission to like this blog."}, status=status.HTTP_403_FORBIDDEN)
         # Verificar si el usuario ya ha dado like
         if Like.objects.filter(user=user, blog=blog).exists():
-            return Response({"message": "You have already liked this blog."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "You have already liked this blog."}, status=status.HTTP_403_FORBIDDEN)
 
 
         # Crear like
         data = {'blog': blog.id}
         serializer = self.get_serializer(data=data, context={'request': request})
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         serializer.save(user=user)  # Asignar usuario al guardar
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -89,22 +92,33 @@ class LikeViewSet(viewsets.ModelViewSet):
         blog_id = kwargs.get('blog_id')  # Obtener el ID del blog desde la URL
 
         # Buscar el blog y verificar acceso
-        blog = get_object_or_404(Blog, id=blog_id)
-        if not self._can_like_blog(user, blog):  
-            return Response({"detail": "You do not have access this blog."}, status=status.HTTP_403_FORBIDDEN)
+        if not Blog.objects.filter(pk=blog_id).exists():
+            return Response({"message": "No blog matches the query."}, status=status.HTTP_404_NOT_FOUND)
+        blog = Blog.objects.get(pk=blog_id)
+        if not can_interact_blog(user, blog):  
+            return Response({"message": "You do not have access this blog."}, status=status.HTTP_403_FORBIDDEN)
         # Buscar el like del usuario en ese blog
-        like = get_object_or_404(Like, user=user, blog=blog)
+        if not Like.objects.filter(user=user.pk, blog=blog.pk).exists():
+            return Response({"messasge": "No like matches the query."}, status=status.HTTP_404_NOT_FOUND)
+        like = Like.objects.get(user=user, blog=blog)
 
         # Eliminar el like
         like.delete()
         return Response({"message": "Like removed successfully."}, status=status.HTTP_204_NO_CONTENT)
 
-    def _can_like_blog(self, user, blog):
-        """Verifica si el usuario tiene permisos para dar like al blog."""
-        return (
-            user.is_authenticated and (
-                (blog.authenticated_access in ['Read Only', 'Read & Write']) or
-                (user == blog.author and blog.author_access in ['Read Only', 'Read & Write']) or
-                (hasattr(user, 'team') and blog.team_access in ['Read Only', 'Read & Write'] and blog.author.team == user.team)
-            )
-        )
+    def retrieve(self, request, *args, **kwargs):
+        user = request.user
+        blog_id = kwargs.get('blog_id')
+        if not Blog.objects.filter(pk=blog_id).exists():
+            return Response({'message': 'No blog matches the query.'}, status=status.HTTP_404_NOT_FOUND)
+        blog = Blog.objects.get(pk=blog_id)
+        
+        if not can_view_blog(user, blog):
+            return Response({"message": "You do not have access this blog."}, status=status.HTTP_403_FORBIDDEN)
+        
+        if not Like.objects.filter(user=user.pk, blog=blog.pk).exists():
+            return Response({'message': 'No like matches the query.'}, status=status.HTTP_404_NOT_FOUND)
+        like = Like.objects.get(user=user.pk, blog=blog.pk)
+        
+        serializer = self.get_serializer(like)
+        return Response(serializer.data, status=status.HTTP_200_OK)

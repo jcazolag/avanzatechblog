@@ -4,26 +4,7 @@ from rest_framework.pagination import PageNumberPagination
 from .models import Blog
 from .serializers import BlogSerializer
 from django.db.models import Q
-
-def can_edit_blog(user, blog):
-    return (
-        user.is_authenticated and (
-            (blog.author == user and blog.author_access == 'Read & Write') or
-            (blog.team_access == 'Read & Write' and user.team == blog.author.team) or
-            (blog.authenticated_access == 'Read & Write')
-        )
-    )
-
-def can_view_blog(user, blog):
-    return (
-        blog.public_access in ['Read Only'] or (
-            user.is_authenticated and (
-                (blog.authenticated_access in ['Read Only', 'Read & Write']) or
-                (blog.author == user and blog.author_access in ['Read Only', 'Read & Write']) or
-                (hasattr(user, 'team') and blog.team_access in ['Read Only', 'Read & Write'] and blog.author.team == user.team)
-            )
-        )
-    )
+from .data.functions import can_edit_blog, can_view_blog
 
 class BlogPagination(PageNumberPagination):
     page_size = 10
@@ -62,7 +43,7 @@ class BlogViewSet(viewsets.ModelViewSet):
         user = request.user
         blog = self.get_object()  # Maneja automáticamente el 404
         if not can_edit_blog(user, blog):
-            return Response({"message": "You don't have permission to edit this blog."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"message": "You don't have permission to edit this blog."}, status=status.HTTP_401_UNAUTHORIZED)
         serializer = self.get_serializer(blog, data=request.data, partial=False)
 
         if serializer.is_valid():
@@ -101,7 +82,7 @@ class BlogViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(blog)
             return Response(serializer.data, status=status.HTTP_200_OK)
         
-        return Response({'message': 'You do not have access to this blog.'}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({'message': 'You do not have access to this blog.'}, status=status.HTTP_404_NOT_FOUND)
     
     def destroy(self, request, *args, **kwargs):
         user = request.user

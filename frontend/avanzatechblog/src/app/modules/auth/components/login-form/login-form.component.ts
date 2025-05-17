@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, Input, signal } from '@angular/core';
 import { FormBuilder, Validators, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RequestStatus } from '@models/request-status.models';
@@ -11,6 +11,8 @@ import { AuthService } from '@services/auth.service';
   styleUrl: './login-form.component.css'
 })
 export class LoginFormComponent {
+  @Input() email!: string;
+  @Input() page!: string;
   form: FormGroup;
 
   showPassword: boolean = false;
@@ -29,6 +31,13 @@ export class LoginFormComponent {
     );
   }
 
+  ngAfterViewInit(){
+    if(this.email){{
+      this.form.get('email')?.setValue(this.email)
+    }}
+    console.log(this.page)
+  }
+
   togglePassword(event: Event){
     this.showPassword = !this.showPassword;
   }
@@ -39,8 +48,8 @@ export class LoginFormComponent {
       this.authService.login( email, password )
       .subscribe({
         next: (response) => {
-          this.router.navigate(['/']);
-          window.location.reload();
+          this.router.navigate([(this.page ? this.page : '/')]);
+          //window.location.reload();
         },
         error: (err) => {
           if (err.status === 400) {
@@ -48,7 +57,7 @@ export class LoginFormComponent {
           }else if(err.status === 403){
             this.message.set(err.error.message);
           } else if (err.status === 0) {
-            this.message.set('Cannot connect to server.');
+            this.message.set('Internal Server Error. Cannot connect to server.');
           }else if(err.status === 409) {
             this.message.set(err.error.message)
           } else if(err.status === 401){

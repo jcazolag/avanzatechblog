@@ -1,10 +1,9 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable, signal, WritableSignal } from '@angular/core';
 import { environment } from '@environment/environment';
 import { Blog } from '@models/Blog.model';
-import { Observable, tap } from 'rxjs';
-import { TokenService } from './token.service';
-import { Generic } from '@models/generic.model';
+import { Observable, tap, timeout } from 'rxjs';
+import { timeoutDuration } from '@utils/globals';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +24,7 @@ export class BlogService {
     return this.http.get<Blog>(url.toString(), {
       withCredentials: true
     }).pipe(
+      timeout(timeoutDuration),
       tap( response => {
         this.Blog.set(response);
       })

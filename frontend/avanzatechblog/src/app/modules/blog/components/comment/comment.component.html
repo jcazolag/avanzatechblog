@@ -1,11 +1,14 @@
-<div class="shadow p-4 mb-1 border">
-    <div class="text-lg font-bold w-full overflow-auto">{{comment.user_name}}</div>
-    <div class="w-full">
-        <p class="text-sm overflow-auto text-justify p-2">
-            {{comment.content}}
+<div class="shadow-md rounded-md p-4 mb-2 border border-neutral-200 bg-white">
+    <div class="text-lg font-semibold text-neutral-800 truncate"
+         title="{{ comment.user_name }}">
+        {{ comment.user_name }}
+    </div>
+    <div class="mt-2">
+        <p class="text-sm text-neutral-700 text-justify leading-relaxed overflow-auto">
+            {{ comment.content }}
         </p>
     </div>
-    <div class="w-full">
-        <span class="text-xs text-gray-500">{{comment.timestamp | date: 'dd/MM/yyyy HH:mm:ss' }}</span>
+    <div class="mt-2">
+        <span class="text-xs text-neutral-500">{{ comment.timestamp | date: 'dd/MM/yyyy HH:mm:ss' }}</span>
     </div>
 </div>

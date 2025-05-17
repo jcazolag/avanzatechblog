@@ -1,9 +1,9 @@
-<header class="w-full bg-neutral-100 border-b shadow-2xl">
+<header class="w-full bg-neutral-100 border-b shadow">
     <div class="mx-auto px-4 py-3 flex justify-between items-center">
         <!-- Logo + Title -->
         <a routerLink="/" class="flex items-center space-x-2">
             <img src="assets/Logo.png" alt="Logo" class="h-8 w-10" />
-            <span class="text-xl font-semibold">Avanzatech</span>
+            <span class="text-md font-bold ">Avanzatech</span>
         </a>
 
         <!-- Hamburger Button (mobile) -->
@@ -16,11 +16,15 @@
         <!-- Desktop Menu -->
         <nav class="hidden md:flex space-x-4 items-center">
             @if (user()) {
-            <span class="text-sm font-semibold text-gray-700">{{ user()?.email }}</span>
+            <div class="font-medium text-neutral-900 truncate max-w-[250px] md:max-w-[300px]"
+                title="{{ user()?.email}}">
+                {{ user()?.email }}
+            </div>
             <span>|</span>
             <button (click)="logout()" class="text-blue-600 hover:text-neutral-600 cursor-pointer">
                 <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M13.5 7.5L10.5 10.75M13.5 7.5L10.5 4.5M13.5 7.5L4 7.5M8 13.5H1.5L1.5 1.5L8 1.5" stroke="currentColor"/>
+                    <path d="M13.5 7.5L10.5 10.75M13.5 7.5L10.5 4.5M13.5 7.5L4 7.5M8 13.5H1.5L1.5 1.5L8 1.5"
+                        stroke="currentColor" />
                 </svg>
             </button>
             } @else {
@@ -32,18 +36,21 @@
 
     <!-- Mobile Menu -->
     @if (menu()) {
-        <div class="md:hidden px-4 py-4 space-y-2 border-t">
-            @if (user()) {
-            <p class="text-sm text-gray-700 font-semibold">{{ user()?.email }}</p>
-            <button (click)="logout()" class="block text-blue-600 hover:text-neutral-600 cursor-pointer" >
-                <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M13.5 7.5L10.5 10.75M13.5 7.5L10.5 4.5M13.5 7.5L4 7.5M8 13.5H1.5L1.5 1.5L8 1.5" stroke="currentColor"/>
-                    </svg>
-            </button>
-            } @else {
-            <a routerLink="/login" class="block text-blue-600 hover:underline cursor-pointer">Login</a>
-            <a routerLink="/register" class="block text-blue-600 hover:underline cursor-pointer">Register</a>
-            }
+    <div class="md:hidden px-4 py-4 space-y-2 border-t">
+        @if (user()) {
+        <div class="font-medium text-neutral-900 truncate max-w-[250px] md:max-w-[300px]" title="{{ user()?.email}}">
+            {{ user()?.email }}
         </div>
+        <button (click)="logout()" class="block text-blue-600 hover:text-neutral-600 cursor-pointer">
+            <svg width="20px" height="20px" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13.5 7.5L10.5 10.75M13.5 7.5L10.5 4.5M13.5 7.5L4 7.5M8 13.5H1.5L1.5 1.5L8 1.5"
+                    stroke="currentColor" />
+            </svg>
+        </button>
+        } @else {
+        <a routerLink="/login" class="block text-blue-600 hover:underline cursor-pointer">Login</a>
+        <a routerLink="/register" class="block text-blue-600 hover:underline cursor-pointer">Register</a>
+        }
+    </div>
     }
 </header>

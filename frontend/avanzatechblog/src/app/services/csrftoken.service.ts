@@ -1,8 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of, tap } from 'rxjs';
+import { Observable, of, tap, timeout } from 'rxjs';
 import { getCookie } from 'typescript-cookie';
 import { environment } from '@environment/environment';
+import { timeoutDuration } from '@utils/globals';
+import { Generic } from '@models/generic.model';
 
 @Injectable({
   providedIn: 'root'
@@ -19,9 +21,10 @@ export class CsrftokenService {
    * Obtiene el CSRF token desde el backend y lo guarda como cookie automáticamente.
    * @returns Observable<boolean> indicando si fue exitoso.
    */
-  fetchCsrfToken(): Observable<Object> {
-    return this.http.get<{message: string}>(`${this.apiUrl}/api/get_csfr/`, { withCredentials: true })
+  fetchCsrfToken(): Observable<Generic> {
+    return this.http.get<Generic>(`${this.apiUrl}/api/get_csfr/`, { withCredentials: true })
     .pipe(
+      timeout(timeoutDuration),
       tap((response) => {
         console.log('CSRF token fetched');
       })

@@ -1,28 +1,28 @@
-import { Component, WritableSignal, inject, signal } from '@angular/core';
-import { NewPost } from '@models/Post.model';
-import { UserService } from '@services/user.service';
+import { Component, EventEmitter, Input, Output, signal, WritableSignal } from '@angular/core';
+import { NewPost, Post } from '@models/Post.model';
 import { FormBuilder, Validators, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PostsService } from '@services/posts.service';
 import { CommonModule } from '@angular/common';
-import { BlogService } from '@services/blog.service';
 
 @Component({
-  selector: 'app-create-form',
+  selector: 'app-post-form',
   imports: [ReactiveFormsModule, CommonModule],
-  templateUrl: './create-form.component.html',
-  styleUrl: './create-form.component.css'
+  templateUrl: './post-form.component.html',
+  styleUrl: './post-form.component.css'
 })
-export class CreateFormComponent {
+export class PostFormComponent {
+  @Input() post!: Post | null;
+  @Input() title: string = 'Post';
+  @Input() buttonText: string = "Submit"
   form: FormGroup;
-  user = inject(UserService).user;
   message = signal<string>('');
+
+  @Output() action = new EventEmitter()
+  @Output() cancelAction = new EventEmitter()
 
   constructor(
     private formBuilder: FormBuilder,
-    private postService: PostsService,
-    private router: Router,
-    private blogService: BlogService
   ) {
     this.form = this.formBuilder.group(
       {
@@ -63,7 +63,23 @@ export class CreateFormComponent {
     });
   }
 
-  createPost() {
+  ngAfterViewInit(){
+    this.setForm();
+  }
+
+  setForm(){
+    const post = this.post;
+    if(post){
+      this.form.get('title')?.setValue(post.title);
+      this.form.get('content')?.setValue(post.content);
+      this.form.get('author_access')?.setValue(post.author_access);
+      this.form.get('team_access')?.setValue(post.team_access);
+      this.form.get('authenticated_access')?.setValue(post.authenticated_access);
+      this.form.get('public_access')?.setValue(post.public_access);
+    }
+  }
+
+  doAction(){
     if (this.form.valid) {
       const {
         title,
@@ -81,18 +97,14 @@ export class CreateFormComponent {
         'authenticated_access': authenticated_access,
         'public_access': public_access
       }
-      this.postService.createPost(newPost)
-        .subscribe({
-          next: (response) => {
-            this.router.navigate(['/post-detail', response.post?.id]);
-          },
-          error: (err) => {
-            this.message.set(err.message)
-          }
-        });
+      this.action.emit(newPost);
     } else {
-      console.log(this.form.get('author_access'))
+      this.form.markAllAsTouched();
     }
+  }
+
+  cancel(){
+    this.cancelAction.emit()
   }
 
   getAuthorAccessOptions(): string[] {

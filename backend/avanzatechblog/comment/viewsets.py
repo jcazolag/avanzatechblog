@@ -4,8 +4,7 @@ from rest_framework.pagination import PageNumberPagination
 from .models import Comment
 from blog.models import Blog
 from .serializers import CommentSerializer
-from django.db.models import Q
-from django.shortcuts import get_object_or_404
+from blog.data.functions import can_view_blog, can_interact_blog
 
 class CommentPagination(PageNumberPagination):
     page_size = 5
@@ -38,16 +37,16 @@ class CommentViewSet(viewsets.ModelViewSet):
 
         blog = Blog.objects.get(pk=blog_id)
         # Validar que el usuario tenga acceso al blog
-        if not self._can_comment_blog(user, blog):
+        if not can_interact_blog(user, blog):
             return Response({"message": "You do not have permission to comment this blog."}, status=status.HTTP_403_FORBIDDEN)
 
         data = {'blog': blog.id, 'content': request.data.get('content')}
 
         serializer = self.get_serializer(data=data, context={'request': request})
-        if serializer.is_valid(raise_exception=False):
-            serializer.save(user=user)  # Asignar usuario al guardar
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response({"message": 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return Response({"message": 'Invalid data'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save(user=user)  # Asignar usuario al guardar
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def list(self, request, *args, **kwargs):
         user = request.user
@@ -86,22 +85,29 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         user = request.user
-        comment = self.get_object()
+        comment_id = kwargs.get('pk')
+        if not Comment.objects.filter(pk=comment_id).exists():
+            return Response({"message": "No comment matches the query."}, status=status.HTTP_404_NOT_FOUND)
+        comment = Comment.objects.get(pk=comment_id)
         blog = comment.blog
-        if self._can_comment_blog(user, blog) and comment.user == user:
+        if can_interact_blog(user, blog) and comment.user == user:
             self.perform_destroy(comment)
             return Response({"message": "Blog removed successfully."},status=status.HTTP_204_NO_CONTENT)
         return Response({'message': 'You do not have permission to delete this comment.'}, status=status.HTTP_403_FORBIDDEN)
     
     def retrieve(self, request, *args, **kwargs):
-        comment = self.get_object()
-        if not self._can_comment_blog(request.user, comment.blog) or comment.user != request.user:
+        comment_id = kwargs.get('pk')
+        if not Comment.objects.filter(pk=comment_id).exists():
+            return Response({"message": "No comment matches the query."}, status=status.HTTP_404_NOT_FOUND)
+        comment = Comment.objects.get(pk=comment_id)
+        if not can_view_blog(request.user, comment.blog):
             return Response({'message': 'You do not have access to this comment.'}, status=status.HTTP_403_FORBIDDEN)
-        return super().retrieve(request, *args, **kwargs)
+        serializer = self.get_serializer(comment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     def update(self, request, *args, **kwargs):
         comment = self.get_object()
-        if not self._can_comment_blog(request.user, comment.blog) or comment.user != request.user:
+        if not can_interact_blog(request.user, comment.blog) or comment.user != request.user:
             return Response({'message': 'You do not have permission to modify this comment.'}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = self.get_serializer(comment, data=request.data, partial=False)
@@ -109,13 +115,3 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def _can_comment_blog(self, user, blog):
-        """Verifica si el usuario tiene permisos para comentar al blog."""
-        return (
-            user.is_authenticated and (
-                (blog.authenticated_access in ['Read Only', 'Read & Write']) or
-                (user == blog.author and blog.author_access in ['Read Only', 'Read & Write']) or
-                (hasattr(user, 'team') and blog.team_access in ['Read Only', 'Read & Write'] and blog.author.team == user.team)
-            )
-        )

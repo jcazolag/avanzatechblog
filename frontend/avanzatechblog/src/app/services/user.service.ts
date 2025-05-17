@@ -1,9 +1,6 @@
 import { Injectable, signal, WritableSignal } from '@angular/core';
 import { User } from '@models/User.model';
-import { TokenService } from './token.service';
 import { environment } from '@environment/environment';
-import { HttpClient } from '@angular/common/http';
-import { AuthResponse } from '@models/auth.models';
 
 @Injectable({
   providedIn: 'root'
@@ -12,10 +9,7 @@ export class UserService {
   apiUrl: string = environment.API_URL;
   user: WritableSignal<User | undefined> = signal<User | undefined>(undefined);
 
-  constructor(
-    private tokenService: TokenService,
-    private http: HttpClient
-  ) { 
+  constructor() { 
     this.getUserInfo();
   }
 

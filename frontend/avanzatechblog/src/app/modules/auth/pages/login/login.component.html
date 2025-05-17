@@ -1,8 +1,8 @@
-<main class="w-full h-[calc(100dvh-3.5rem)] min-h-min flex items-center justify-center bg-gray-50 relative">
-    <section class=" min-h-min min-w-min py-8 ">
-        <div class="bg-white rounded border shadow-2xl py-4 px-4 md:px-9">
+<div class="container mx-auto h-[calc(100dvh-3.55rem)] min-h-min">
+    <section class="py-8 px-2">
+        <div class="bg-white rounded border shadow-2xl py-4 px-4 md:px-12">
             <div class="mb-4">
-                <app-login-form></app-login-form>
+                <app-login-form [email]="email" [page]="next" />
             </div>
             <hr class="my-4 border-b-1 border-r-gray-300" />
             <div
@@ -13,4 +13,4 @@
             </div>
         </div>
     </section>
-</main>
+</div>

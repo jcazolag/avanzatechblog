@@ -1,0 +1,1 @@
+export const timeoutDuration = 5000;

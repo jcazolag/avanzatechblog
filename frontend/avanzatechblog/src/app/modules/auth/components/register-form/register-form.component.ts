@@ -39,7 +39,7 @@ export class RegisterFormComponent {
       .subscribe({
         next: (response) => {
           alert("User created successfuly");
-          this.router.navigate(['/login']);
+          this.router.navigate(['/login', {email: response.email}]);
         },
         error: (err) => {
           if (err.status === 400) {
@@ -47,7 +47,7 @@ export class RegisterFormComponent {
           }else if(err.status === 403){
             this.message.set(err.error.message);
           } else if (err.status === 0) {
-            this.message.set('Cannot connect to server.');
+            this.message.set('Internal Server Error. Cannot connect to server.');
           }else if(err.status === 409) {
             this.message.set(err.error.message)
           }else {

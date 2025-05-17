@@ -5,12 +5,15 @@ import { BlogService } from '@services/blog.service';
 import { RouterLinkWithHref } from '@angular/router';
 import { UserService } from '@services/user.service';
 import { User } from '@models/User.model';
-import { NotfoundComponent } from '@modules/blog/components/notfound/notfound.component';
-import { timer, Subscription, switchMap } from 'rxjs';
+import { NotfoundComponent } from '@modules/shared/notfound/notfound.component';
+import { PageStatus } from '@models/request-status.models';
+import { ServerErrorComponent } from '@modules/shared/server-error/server-error.component';
+import { LoadingScreenComponent } from '@modules/shared/loading-screen/loading-screen.component';
+//import { timer, Subscription, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-list',
-  imports: [PostComponent, RouterLinkWithHref, NotfoundComponent],
+  imports: [PostComponent, RouterLinkWithHref, NotfoundComponent, ServerErrorComponent, LoadingScreenComponent],
   templateUrl: './list.component.html',
   styleUrl: './list.component.css'
 })
@@ -19,7 +22,7 @@ export default class ListComponent {
   Blog: WritableSignal<Blog | null> = this.blogService.Blog;
   user: WritableSignal<User | undefined> = inject(UserService).user;
   @Input() Page?: number;
-  hasError: WritableSignal<boolean> = signal(false);
+  status: WritableSignal<PageStatus> = signal<PageStatus>('loading')
 
   injector = inject(Injector);
 
@@ -27,7 +30,7 @@ export default class ListComponent {
   ) { }
 
   ngOnInit() {
-    this.getBlog();
+    //this.getBlog();
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -37,10 +40,14 @@ export default class ListComponent {
   getBlog() {
     this.blogService.getBlog(this.Page).subscribe({
       next: (response) =>{
-        this.hasError.set(false);
+        this.status.set('success');
       },
       error: (err) => {
-        this.hasError.set(true);
+        if (err.status === 404) {
+          this.status.set('404');
+        }else{
+          this.status.set('500')
+        }
       }
     });
   }

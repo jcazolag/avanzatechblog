@@ -30,16 +30,18 @@ class UserViewset(viewsets.ModelViewSet):
             return Response({"message": "Email already taken"}, status=status.HTTP_409_CONFLICT)
 
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(user=user)
-            return Response({"message": "User created succesfully" ,"User": serializer.data}, status=status.HTTP_201_CREATED)
-        return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.save(user=user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, *args, **kwargs):
         """Devuelve la información del usuario solicitado por pk"""
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response({"message": "Success", "User": serializer.data}, status=status.HTTP_200_OK)
+        user = kwargs.get('pk')
+        if not User.objects.filter(pk=user).exists():
+            return Response({"message": "No user matches the query."}, status=status.HTTP_404_NOT_FOUND)
+        serializer = self.get_serializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
@@ -48,4 +50,4 @@ class UserViewset(viewsets.ModelViewSet):
         if not user.is_authenticated:
             return Response({"message": "Invalid credentials"}, status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(user)
-        return Response({"message": "Success", "User": serializer.data}, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_200_OK)

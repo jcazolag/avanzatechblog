@@ -5,14 +5,28 @@ import { LikeService } from '@services/like.service';
 import { LikeResponse } from '@models/Like.models';
 import { CommentService } from '@services/comment.service';
 import { UserService } from '@services/user.service';
-import { BlogService } from '@services/blog.service';
 import { User } from '@models/User.model';
 import { RouterLinkWithHref } from '@angular/router';
 import { PostsService } from '@services/posts.service';
+import { LikePaginatorComponent } from '@modules/shared/components/like-paginator/like-paginator.component';
+import { CommentsCountComponent } from '@modules/shared/components/comments-count/comments-count.component';
+import { EditButtonComponent } from '@modules/shared/components/edit-button/edit-button.component';
+import { DeleteButtonComponent } from '@modules/shared/components/delete-button/delete-button.component';
+import { LikeButtonComponent } from '@modules/shared/components/like-button/like-button.component';
+import { CommentButtonComponent } from '@modules/shared/components/comment-button/comment-button.component';
 
 @Component({
   selector: 'app-post',
-  imports: [CommonModule, RouterLinkWithHref],
+  imports: [
+    CommonModule, 
+    RouterLinkWithHref, 
+    LikePaginatorComponent, 
+    CommentsCountComponent, 
+    EditButtonComponent,
+    DeleteButtonComponent,
+    LikeButtonComponent,
+    CommentButtonComponent
+  ],
   templateUrl: './post.component.html',
   styleUrl: './post.component.css'
 })
@@ -43,7 +57,6 @@ export class PostComponent {
   constructor(
     private likeService: LikeService,
     private commentService: CommentService,
-    private blogService: BlogService,
     private postService: PostsService
   ) { }
 
@@ -61,15 +74,16 @@ export class PostComponent {
     const user = this.user();
     const post = this.post;
     if (user) {
-      this.likeService.userLikedPost(post.id, user.id)
+      this.likeService.userLikedPost(post.id)
         .subscribe({
           next: (res) => {
             if (res) {
-              const result = res.results;
-              result[0] ? this.liked.set(true) : this.liked.set(false);
+              this.liked.set(true); 
             }
           },
-          error: (err) => { }
+          error: (err) => { 
+            this.liked.set(false);
+          }
         });
     }
   }
@@ -119,7 +133,11 @@ export class PostComponent {
           this.liked.set(false);
         },
         error: (err) => {
-          console.error('Error eliminando like:', err);
+          if (err.status == 0) {
+            alert("Internal server error. Try agian later.")
+          }else if ( err.status === 403 ){
+            alert("You cannot like the post.")
+          }
         },
       });
     } else {

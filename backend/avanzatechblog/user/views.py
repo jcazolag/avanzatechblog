@@ -9,11 +9,11 @@ class LoginAPIView(APIView):
         username = request.data.get("email")
         password = request.data.get("password")
         user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            serialized_user = UserSerializer(user)
-            return Response({"message": "Success", "User": serialized_user.data}, status=status.HTTP_200_OK)
-        return Response({"message": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        if not user:
+            return Response({"message": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        login(request, user)
+        serialized_user = UserSerializer(user)
+        return Response(serialized_user.data, status=status.HTTP_200_OK)
 
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
