@@ -1,55 +1,74 @@
 import pytest
 from django.core.exceptions import ValidationError
-from blog.models import Blog
-from user.models import User, Team, Role
 from like.models import Like
+from blog.models import Blog
+from user.models import User
 
-def create_user(username, email, password, team_title):
-    team=None
-    if team_title:
-        team = Team.objects.create(title=team_title)
-    return User.objects.create_user(username=username, email=email, password=password, team=team)
+pytestmark = pytest.mark.django_db
 
-def create_admin(username, email, password):
-    return User.objects.create_admin(username=username, email=email, password=password)
+def create_user(email="user@example.com", is_admin=False):
+    user = User.objects.create_user(
+        email=email,
+        password="password123"
+    )
+    if is_admin:
+        user.is_staff = True
+        user.save()
+    return user
 
-def create_blog(author, title="Test Blog", author_access="Read & Write", team_access="Read Only", authenticated_access="Read Only"):
+def create_blog(author=None):
+    if not author:
+        author = create_user("author@example.com")
     return Blog.objects.create(
         author=author,
-        title=title,
-        content="Sample content",
-        author_access=author_access,
-        team_access=team_access,
-        authenticated_access=authenticated_access
+        title="Test Blog",
+        content="Content",
+        author_access="Read & Write",
+        team_access="Read Only",
+        authenticated_access="Read Only",
+        public_access="Read Only"
     )
 
-def test_create_like_valid(db):
-    user = create_user("testuser", "test@example.com", "test", "Test Team")
-    blog = create_blog(user)
+def test_user_can_like_accessible_blog():
+    user = create_user()
+    blog = create_blog()
+    
     like = Like(user=user, blog=blog)
     like.save()
+    
     assert Like.objects.filter(user=user, blog=blog).exists()
 
-def test_like_duplicate_fails(db):
-    user = create_user("testuser", "test@example.com", "test", "Test Team")
-    blog = create_blog(user)
+def test_user_cannot_like_same_blog_twice():
+    user = create_user()
+    blog = create_blog()
+
     Like.objects.create(user=user, blog=blog)
-    with pytest.raises(ValidationError, match="You have already liked this blog."):
-        like = Like(user=user, blog=blog)
+    like = Like(user=user, blog=blog)
+
+    with pytest.raises(ValidationError, match="already liked"):
         like.full_clean()
 
-def test_admin_cannot_like(db):
-    admin = create_admin("adminuser", "admin@example.com", "admin")
-    author = create_user("normaluser", "user@example.com", "user", None)  # Crear un usuario normal
-    blog = create_blog(author)  # Crear el blog con un usuario normal
+def test_user_cannot_like_inaccessible_blog():
+    user = create_user()
+    author = create_user("author2@example.com")
+    blog = Blog.objects.create(
+        author=author,
+        title="Private Blog",
+        content="Secret",
+        author_access="Read Only",
+        team_access="None",
+        authenticated_access="None",
+        public_access="None"
+    )
 
-    with pytest.raises(ValidationError, match="Administrators cannot like blogs."):
-        Like.objects.create(user=admin, blog=blog)
+    like = Like(user=user, blog=blog)
+    with pytest.raises(ValidationError, match="do not have permission"):
+        like.full_clean()
 
-def test_cannot_like_blog_without_permission(db):
-    author = create_user("author", "author@example.com", "test", "Team A")
-    other_user = create_user("otheruser", "other@example.com", "other", "Team B")
-    blog = create_blog(author, author_access="Read Only", team_access="None", authenticated_access="None")
-    with pytest.raises(ValidationError, match="You do not have permission to like this blog."):
-        like = Like(user=other_user, blog=blog)
+def test_admin_cannot_like_blog():
+    admin = create_user("admin@example.com", is_admin=True)
+    blog = create_blog()
+
+    like = Like(user=admin, blog=blog)
+    with pytest.raises(ValidationError, match="Administrators cannot like"):
         like.full_clean()

@@ -9,6 +9,5 @@ import { LoginFormComponent } from '@modules/auth/components/login-form/login-fo
   styleUrl: './login.component.css'
 })
 export default class LoginComponent {
-  @Input() email: string = ''
-  @Input() next: string = '/post/71/'
+  @Input() email!: string;
 }

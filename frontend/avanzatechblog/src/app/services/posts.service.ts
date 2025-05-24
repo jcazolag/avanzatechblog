@@ -18,13 +18,13 @@ export class PostsService {
     private tokenService: TokenService
   ) { }
 
-  createPost(post: NewPost): Observable<PostResponse> {
+  createPost(post: NewPost): Observable<Post> {
     const csrfToken = this.tokenService.getToken('csrftoken');
     const headers = new HttpHeaders({
       'X-CSRFToken': csrfToken || '',
       'Content-Type': 'application/json',
     });
-    return this.http.post<PostResponse>(`${this.apiUrl}/api/blog/post/`, post, { headers, withCredentials: true })
+    return this.http.post<Post>(`${this.apiUrl}/api/blog/post/`, post, { headers, withCredentials: true })
       .pipe(
         timeout(timeoutDuration)
       );

@@ -27,7 +27,7 @@
                 Password
                 <input formControlName="password" placeholder="" type="password" id="password" name="password"
                     class="bg-gray-100 border border-gray-300 text-gray-900 rounded-lg block w-full p-2" />
-                
+
             </label>
         </div>
         @if (form.get('password')?.touched && form.get('password')?.invalid) {
@@ -48,7 +48,8 @@
         <div class="relative">
             <label for="confirmPassword">
                 Confirm Password
-                <input formControlName="confirmPassword" placeholder="" type="password" id="confirmPassword" name="confirmPassword"
+                <input formControlName="confirmPassword" placeholder="" type="password" id="confirmPassword"
+                    name="confirmPassword"
                     class="bg-gray-100 border border-gray-300 text-gray-900 rounded-lg block w-full p-2" />
             </label>
         </div>
@@ -69,8 +70,36 @@
 
     <!-- Submit Button -->
     <div class="text-center">
-        <button type="submit" class="text-white cursor-pointer bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">Register</button> 
+        <button type="submit" class="
+                text-white
+                cursor-pointer
+                focus:ring-4 
+                focus:ring-blue-300 
+                font-medium 
+                rounded-lg 
+                text-sm 
+                px-5 
+                py-2.5 
+                me-2 
+                mb-2 
+                focus:outline-none 
+            " [disabled]="status === 'loading'" [class]="{
+                'hover:bg-blue-800': status === 'init',
+                'bg-blue-700': status === 'init' || status === 'loading',
+                'bg-red-700': status === 'failed',
+                'hover:bg-red-800': status === 'failed'
+            }">
+            @if (status === 'init') {
+            Register
+            }@else if (status === 'loading') {
+            <app-loading-animation [border_color]="'white'" />
+            }@else if (status === 'failed'){
+            Retry
+            }
+        </button>
     </div>
 </form>
 
-<p class="text-red-500 text-center mt-1 ml-1">{{message()}}</p>
+@for (item of message(); track $index) {
+<p class="text-red-500 text-center mt-1 ml-1 text-lg">{{item}}</p>
+}

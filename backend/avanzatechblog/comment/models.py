@@ -2,6 +2,7 @@ from django.db import models
 from blog.models import Blog
 from user.models import User
 from django.core.exceptions import ValidationError
+from blog.data.functions import can_interact_blog
 
 # Create your models here.
 
@@ -13,20 +14,10 @@ class Comment(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ["-timestamp"]
+        ordering = ["timestamp"]
 
     def __str__(self):
         return f"Comment by {self.user.email} on {self.blog.title}"
-
-    def can_comment_blog(self):
-        """Verifica si el usuario tiene acceso para comentar a un blog."""
-        if self.blog.author == self.user and self.blog.author_access in ['Read & Write', 'Read Only']:
-            return True
-        if self.blog.team_access in ['Read & Write', 'Read Only'] and self.user.team == self.blog.author.team:
-            return True
-        if self.user.is_authenticated and self.blog.authenticated_access in ['Read & Write', 'Read Only']:
-            return True
-        return False
 
     def clean(self):
         """Valida si el usuario tiene permisos para dar like."""
@@ -39,7 +30,7 @@ class Comment(models.Model):
         if self.user.is_staff or self.user.team.title == 'admin' or self.user.role.title == 'admin':
             raise ValidationError("Administrators cannot comment blogs.")
 
-        if not self.can_comment_blog():
+        if not can_interact_blog(self.user, self.blog):
             raise ValidationError("You do not have permission to comment this blog.")
 
     def save(self, *args, **kwargs):

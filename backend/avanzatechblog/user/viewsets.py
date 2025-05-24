@@ -2,9 +2,9 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import User
 from .serializers import UserSerializer
-from rest_framework.exceptions import NotFound
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import authenticate, login, logout
 
 class UserViewset(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -15,39 +15,44 @@ class UserViewset(viewsets.ModelViewSet):
 
         if user.is_authenticated:
             return Response({"message": "You are arleady loged."}, status=status.HTTP_403_FORBIDDEN)
-        
-        email = request.data['email']
-        password = request.data['password']
-
-        if not email:
-            return Response({'message': 'Email must be set.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not password:
-            return Response({'message': 'Password must be set.'}, status=status.HTTP_400_BAD_REQUEST)
-        
-
-        if User.objects.filter(email=email).exists():
-            return Response({"message": "Email already taken"}, status=status.HTTP_409_CONFLICT)
 
         serializer = self.get_serializer(data=request.data)
-        if not serializer.is_valid():
-            return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-        serializer.save(user=user)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, *args, **kwargs):
-        """Devuelve la información del usuario solicitado por pk"""
-        user = kwargs.get('pk')
-        if not User.objects.filter(pk=user).exists():
+        pk = kwargs.get('pk')
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
             return Response({"message": "No user matches the query."}, status=status.HTTP_404_NOT_FOUND)
         serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
-        """Devuelve la información del usuario autenticado"""
         user = request.user
         if not user.is_authenticated:
             return Response({"message": "Invalid credentials"}, status=status.HTTP_403_FORBIDDEN)
-        serializer = self.get_serializer(user)
+        serializer = self.get_serializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
+    def login(self, request):
+        username = request.data.get("email")
+        password = request.data.get("password")
+        user = authenticate(request, username=username, password=password)
+        if not user:
+            return Response({"message": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+        login(request, user)
+        serialized_user = UserSerializer(user)
+        return Response(serialized_user.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def logout(self, request):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({"message": "You are not logged"}, status=status.HTTP_403_FORBIDDEN)
+        logout(request)
+        return Response({'message': 'Logged out successfully'}, status=status.HTTP_200_OK)

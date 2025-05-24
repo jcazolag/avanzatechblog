@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ServerErrorPageComponent } from './server-error-page.component';
+import ServerErrorPageComponent from './server-error-page.component';
 
 describe('ServerErrorPageComponent', () => {
   let component: ServerErrorPageComponent;

@@ -27,7 +27,7 @@
                                     'text-blue-600': Blog()?.previous_page === null
                                 }"
                         class="flex items-center justify-center px-4 h-10 ms-0 leading-tight border border-e-0 border-gray-300 rounded-s-lg">
-                        prev </a>
+                        < </a>
                 </li>
                 <li>
                     <p class="flex items-center px-4 h-10 leading-tight border border-gray-300">
@@ -45,7 +45,7 @@
                                     'text-blue-600': Blog()?.next_page === null
                                 }"
                         class="flex items-center justify-center px-4 h-10 leading-tight border border-gray-300 rounded-e-lg">
-                        next
+                        >
                     </a>
                 </li>
             </ul>
@@ -74,5 +74,5 @@
 }@else if (status() === '500') {
 <app-server-error />
 }@else {
-    <app-loading-screen />
+<app-loading-screen />
 }

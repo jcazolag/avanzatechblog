@@ -1,72 +1,60 @@
 import pytest
-from user.models import User, Team, Role
+from django.contrib.auth import get_user_model
+from user.models import Team, Role, User
 
 @pytest.mark.django_db
-def test_create_team():
-    """Verifica que se pueda crear un equipo"""
-    team = Team.objects.create(title="Development")
-    assert team.title == "Development"
-    assert Team.objects.count() == 1
+class TestModels:
 
-@pytest.mark.django_db
-def test_create_role():
-    """Verifica que se pueda crear un rol"""
-    role = Role.objects.create(title="Manager")
-    assert role.title == "Manager"
-    assert Role.objects.count() == 1
+    def test_team_str(self):
+        team = Team.objects.create(title="Developers")
+        assert str(team) == "Developers"
 
-@pytest.mark.django_db
-def test_create_user():
-    """Verifica que se pueda crear un usuario con el UserManager"""
-    user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass")
+    def test_role_str(self):
+        role = Role.objects.create(title="Editor")
+        assert str(role) == "Editor"
 
-    assert user.username == "testuser"
-    assert user.email == "test@example.com"
-    assert user.is_staff is False
-    assert user.is_superuser is False
-    assert user.check_password("testpass")
-    assert User.objects.count() == 1
+    def test_create_regular_user(self):
+        user = User.objects.create_user(email="user@example.com", password="test123")
+        
+        assert user.email == "user@example.com"
+        assert user.check_password("test123")
+        assert user.is_active is True
+        assert user.is_staff is False
+        assert user.is_superuser is False
+        assert user.role.title == "blogger"
+        assert user.team.title == "default"
 
-@pytest.mark.django_db
-def test_create_superuser():
-    """Verifica que se pueda crear un superusuario correctamente"""
-    user = User.objects.create_superuser(username="admin", email="admin@example.com", password="adminpass")
+    def test_create_superuser(self):
+        user = User.objects.create_superuser(email="admin@example.com", password="superpass")
+        
+        assert user.email == "admin@example.com"
+        assert user.is_staff is True
+        assert user.is_superuser is True
+        assert user.check_password("superpass")
+        assert user.role.title == "admin"
+        assert user.team.title == "admin"
 
-    assert user.username == "admin"
-    assert user.email == "admin@example.com"
-    assert user.is_staff is True
-    assert user.is_superuser is True
-    assert user.check_password("adminpass")
-    assert User.objects.count() == 1
+    def test_create_admin(self):
+        user = User.objects.create_admin(email="admin2@example.com", password="adminpass")
+        
+        assert user.is_staff is True
+        assert user.is_superuser is False
+        assert user.role.title == "admin"
+        assert user.team.title == "admin"
 
-@pytest.mark.django_db
-def test_create_admin():
-    """Verifica que se pueda crear un usuario administrador correctamente"""
-    user = User.objects.create_admin(username="adminuser", email="adminuser@example.com", password="adminpass")
+    def test_save_non_staff_sets_blogger_default(self):
+        Role.objects.create(title="admin")
+        Team.objects.create(title="admin")
+        user = User(email="normal@example.com", password="123")
+        user.is_staff = False
+        user.save()
+        
+        assert user.role.title == "blogger"
+        assert user.team.title == "default"
 
-    assert user.username == "adminuser"
-    assert user.email == "adminuser@example.com"
-    assert user.is_staff is True
-    assert user.is_superuser is False
-    assert user.check_password("adminpass")
-    assert User.objects.count() == 1
+    def test_save_staff_sets_admin_team_and_role(self):
+        user = User(email="staff@example.com", password="123", is_staff=True)
+        user.save()
 
-@pytest.mark.django_db
-def test_user_save_assigns_role_and_team():
-    """Verifica que el método save() asigna roles y equipos automáticamente"""
-    user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass")
-    
-    assert user.team is not None
-    assert user.role is not None
-    assert user.role.title == "blogger"
-    assert user.team.title == "default"
-
-@pytest.mark.django_db
-def test_admin_user_gets_admin_role_and_team():
-    """Verifica que los usuarios staff obtienen el rol y equipo admin"""
-    user = User.objects.create_user(username="adminuser", email="admin@example.com", password="adminpass", is_staff=True)
-    
-    assert user.team is not None
-    assert user.role is not None
-    assert user.role.title == "admin"
-    assert user.team.title == "admin"
+        assert user.role.title == "admin"
+        assert user.team.title == "admin"

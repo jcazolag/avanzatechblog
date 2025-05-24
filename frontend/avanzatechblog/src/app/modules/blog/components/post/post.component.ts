@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, EventEmitter, HostListener, inject, Input, Output, Signal, signal, ViewChild, WritableSignal } from '@angular/core';
+import { Component, computed, ElementRef, EventEmitter, HostListener, inject, Input, Output, Signal, signal, ViewChild, WritableSignal } from '@angular/core';
 import { Post } from '@models/Post.model';
 import { CommonModule } from '@angular/common';
 import { LikeService } from '@services/like.service';
@@ -6,7 +6,7 @@ import { LikeResponse } from '@models/Like.models';
 import { CommentService } from '@services/comment.service';
 import { UserService } from '@services/user.service';
 import { User } from '@models/User.model';
-import { RouterLinkWithHref } from '@angular/router';
+import { Router, RouterLinkWithHref } from '@angular/router';
 import { PostsService } from '@services/posts.service';
 import { LikePaginatorComponent } from '@modules/shared/components/like-paginator/like-paginator.component';
 import { CommentsCountComponent } from '@modules/shared/components/comments-count/comments-count.component';
@@ -14,14 +14,15 @@ import { EditButtonComponent } from '@modules/shared/components/edit-button/edit
 import { DeleteButtonComponent } from '@modules/shared/components/delete-button/delete-button.component';
 import { LikeButtonComponent } from '@modules/shared/components/like-button/like-button.component';
 import { CommentButtonComponent } from '@modules/shared/components/comment-button/comment-button.component';
+import { RequestStatus } from '@models/request-status.models';
 
 @Component({
   selector: 'app-post',
   imports: [
-    CommonModule, 
-    RouterLinkWithHref, 
-    LikePaginatorComponent, 
-    CommentsCountComponent, 
+    CommonModule,
+    RouterLinkWithHref,
+    LikePaginatorComponent,
+    CommentsCountComponent,
     EditButtonComponent,
     DeleteButtonComponent,
     LikeButtonComponent,
@@ -33,12 +34,9 @@ import { CommentButtonComponent } from '@modules/shared/components/comment-butto
 export class PostComponent {
   @Input({ required: true }) post!: Post;
   @Output() getBlog = new EventEmitter();
-  likes: WritableSignal<LikeResponse | null> = signal<LikeResponse | null>(null)
-  currentPage = 1;
-  comments: WritableSignal<number> = signal<number>(0);
-  popoverOpen: boolean = false;
   user = inject(UserService).user;
-  liked: WritableSignal<boolean> = signal<boolean>(false);
+  currentPage = 1;
+  popoverOpen: boolean = false;
   alert: boolean = false;
   access_buttons: Signal<boolean> = computed(() => {
     const user: User | undefined = this.user();
@@ -52,18 +50,32 @@ export class PostComponent {
     return true;
   });
 
+  liked: WritableSignal<boolean> = signal<boolean>(false);
+  likedStatus: WritableSignal<RequestStatus> = signal<RequestStatus>('init');
+  likes: WritableSignal<LikeResponse | null> = signal<LikeResponse | null>(null);
+  likeMessage: WritableSignal<string[]> = signal<string[]>([]);
+
+  comments: WritableSignal<number> = signal<number>(0);
+
+  deleteStatus: WritableSignal<RequestStatus> = signal<RequestStatus>('init');
+  deleteMessage: WritableSignal<string[]> = signal<string[]>([]);
+
   @ViewChild('popoverRef') popoverRef!: ElementRef;
 
   constructor(
     private likeService: LikeService,
     private commentService: CommentService,
-    private postService: PostsService
+    private postService: PostsService,
+    private router: Router
   ) { }
 
   ngOnInit() {
-    this.getLikes();
-    this.userLiked();
-    this.getComments();
+    const post = this.post;
+    if(post){
+      this.userLiked();
+      this.getLikes();
+      this.getComments();
+    }
   }
 
   toggleAlert() {
@@ -78,10 +90,10 @@ export class PostComponent {
         .subscribe({
           next: (res) => {
             if (res) {
-              this.liked.set(true); 
+              this.liked.set(true);
             }
           },
-          error: (err) => { 
+          error: (err) => {
             this.liked.set(false);
           }
         });
@@ -114,7 +126,15 @@ export class PostComponent {
           }
         },
         error: (err) => {
-          console.log(err);
+          if (err.status === 0) {
+              this.likeMessage.set(['Internal Server Error. Cannot connect to server.']);
+            } else {
+              for (const key in err.error) {
+                if (err.error.hasOwnProperty(key)) {
+                  this.likeMessage.update(items => [...items, err.error[key]]);
+                }
+              }
+            }
         }
       });
   }
@@ -124,18 +144,19 @@ export class PostComponent {
     const likes = this.likes();
 
     if (!userId || !likes || !likes.results) return;
-
+    this.likedStatus.set('loading');
     if (this.liked()) {
       // Eliminar el like existente
       this.likeService.unlikePost(this.post.id).subscribe({
         next: () => {
           this.getLikes();
           this.liked.set(false);
+          this.likedStatus.set('init');
         },
         error: (err) => {
           if (err.status == 0) {
-            alert("Internal server error. Try agian later.")
-          }else if ( err.status === 403 ){
+            alert("Internal server error. Try again later.")
+          } else if (err.status === 403) {
             alert("You cannot like the post.")
           }
         },
@@ -146,30 +167,50 @@ export class PostComponent {
         next: (newLike) => {
           this.getLikes();
           this.liked.set(true);
+          this.likedStatus.set('init');
         },
         error: (err) => {
-          console.error('Error creando like:', err);
+          //console.error('Error creando like:', err);
         },
       });
     }
   }
 
   deletePost() {
-    this.postService.deletePost(this.post.id)
-    .subscribe({
-      next: (response) => {
-        this.getBlog.emit();
-      },
-      error: (err) =>{
-        console.log(err)
-      }
-    });
-    this.toggleAlert();
+    const post = this.post
+    if (post){
+      this.deleteMessage.set([]);
+      this.deleteStatus.set('loading');
+      this.postService.deletePost(this.post.id)
+        .subscribe({
+          next: (response) => {
+            this.deleteStatus.set('success');
+            this.getBlog.emit();
+          },
+          error: (err) => {
+            this.deleteStatus.set('failed');
+            if (err.status === 0) {
+              this.deleteMessage.set(['Internal Server Error. Cannot connect to server.']);
+            } else {
+              for (const key in err.error) {
+                if (err.error.hasOwnProperty(key)) {
+                  this.deleteMessage.update(items => [...items, err.error[key]]);
+                }
+              }
+            }
+          }
+        });
+      this.toggleAlert();
+    }
   }
 
   togglePopover(event: MouseEvent) {
     event.stopPropagation();
     this.popoverOpen = !this.popoverOpen;
+  }
+
+  goToDetail() {
+    this.router.navigate(['/post', this.post.id], { queryParams: { edit_post: true, } })
   }
 
   @HostListener('document:click', ['$event'])

@@ -1,20 +1,9 @@
 from rest_framework import serializers
 from .models import Like
 from blog.models import Blog
-
-def can_view_blog(user, blog):
-    """Determina si el usuario puede ver el blog y, por lo tanto, darle like."""
-    if not user.is_authenticated:
-        return False
-
-    return (
-        blog.authenticated_access in ['Read Only', 'Read & Write'] or
-        (blog.author == user and blog.author_access in ['Read Only', 'Read & Write']) or
-        (hasattr(user, 'team') and blog.team_access in ['Read Only', 'Read & Write'] and blog.author.team == user.team)
-    )
+from blog.data.functions import can_interact_blog
 
 class LikeSerializer(serializers.ModelSerializer):
-    #blog_title = serializers.CharField(source='blog.title', read_only=True)
     user_name = serializers.CharField(source='user.email', read_only=True)
 
     class Meta:
@@ -23,10 +12,13 @@ class LikeSerializer(serializers.ModelSerializer):
         read_only_fields = ['user', 'created_at', 'blog']
 
     def validate(self, data):
-        """Valida si el usuario puede dar like a este blog."""
         request = self.context.get('request')
         user = request.user if request else None
-        blog_id = self.initial_data.get('blog')  # Evita errores si 'blog' no está en el request
+        
+        if not user or not user.is_authenticated:
+            raise serializers.ValidationError({"detail": "You do not have permission to like this blog."})
+
+        blog_id = self.initial_data.get('blog')
 
         if not blog_id:
             raise serializers.ValidationError({"blog": "This field is required."})
@@ -35,16 +27,15 @@ class LikeSerializer(serializers.ModelSerializer):
         if not blog:
             raise serializers.ValidationError({"blog": "Invalid blog ID."})
 
-        if Like.objects.filter(user=user, blog=blog).exists():
+        if Like.objects.filter(user=user.id, blog=blog).exists():
             raise serializers.ValidationError({"detail": "You have already liked this blog."})
 
-        if not can_view_blog(user, blog):
+        if not can_interact_blog(user, blog) or user.is_staff or getattr(user.team, 'title', '') == 'admin' or getattr(user.role, 'title', '') == 'admin':
             raise serializers.ValidationError({"detail": "You do not have permission to like this blog."})
 
-        data['blog'] = blog  # Asigna la instancia del blog validado
+        data['blog'] = blog
         return data
 
     def create(self, validated_data):
-        """Asigna automáticamente el usuario autenticado al like."""
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)

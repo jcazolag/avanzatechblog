@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { getCookie, setCookie, removeCookie } from 'typescript-cookie';
+import { CookieWrapper } from '@utils/cookieWrapper';
 
 @Injectable({
   providedIn: 'root'
@@ -8,16 +8,15 @@ export class TokenService {
 
   constructor() { }
 
-  saveToken(tokenName: string, token: string){
-    setCookie(tokenName, token, {expires: 365, path: '/'});
+  saveToken(tokenName: string, token: string): void{
+    CookieWrapper.setCookie(tokenName, token, {expires: 365, path: '/'});
   }
 
-  getToken(tokenName: string){
-    const token = getCookie(tokenName);
-    return token;
+  getToken(tokenName: string): string | undefined{
+    return CookieWrapper.getCookie(tokenName);
   }
 
-  removeToken(tokenName: string){
-    removeCookie(tokenName);
+  removeToken(tokenName: string): void{
+    CookieWrapper.removeCookie(tokenName);
   }
 }

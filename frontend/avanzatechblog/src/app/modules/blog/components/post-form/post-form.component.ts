@@ -4,10 +4,13 @@ import { FormBuilder, Validators, FormGroup, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { PostsService } from '@services/posts.service';
 import { CommonModule } from '@angular/common';
+import { RequestStatus } from '@models/request-status.models';
+import { FormsModule } from '@angular/forms';
+import { NgxEditorComponent, NgxEditorMenuComponent, Editor, Toolbar } from 'ngx-editor';
 
 @Component({
   selector: 'app-post-form',
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule, NgxEditorComponent, NgxEditorMenuComponent],
   templateUrl: './post-form.component.html',
   styleUrl: './post-form.component.css'
 })
@@ -15,8 +18,21 @@ export class PostFormComponent {
   @Input() post!: Post | null;
   @Input() title: string = 'Post';
   @Input() buttonText: string = "Submit"
+  @Input({required: true}) status: WritableSignal<RequestStatus> = signal<RequestStatus>('init');
   form: FormGroup;
-  message = signal<string>('');
+  message: WritableSignal<string> = signal<string>('');
+
+  editor: Editor;
+
+  toolbar: Toolbar = [
+    ['bold', 'italic', 'underline', 'strike'],
+    ['code', 'blockquote'],
+    ['ordered_list', 'bullet_list'],
+    ['link'],
+    ['undo', 'redo'],
+    ['text_color', 'background_color'],
+    ['align_left', 'align_center', 'align_right', 'align_justify'],
+  ];
 
   @Output() action = new EventEmitter()
   @Output() cancelAction = new EventEmitter()
@@ -24,12 +40,14 @@ export class PostFormComponent {
   constructor(
     private formBuilder: FormBuilder,
   ) {
+    this.editor = new Editor();
+
     this.form = this.formBuilder.group(
       {
         title: ['', [Validators.required, Validators.maxLength(50)]],
         content: ['', [Validators.required]],
         author_access: ['Read & Write', [Validators.required]],
-        team_access: ['Read Only', [Validators.required]],
+        team_access: ['Read & Write', [Validators.required]],
         authenticated_access: ['Read Only', Validators.required],
         public_access: ['Read Only', [Validators.required]]
       }
@@ -63,8 +81,16 @@ export class PostFormComponent {
     });
   }
 
+  ngOnInit(){
+    
+  }
+
   ngAfterViewInit(){
     this.setForm();
+  }
+
+  ngOnDestroy(): void {
+    this.editor.destroy();
   }
 
   setForm(){

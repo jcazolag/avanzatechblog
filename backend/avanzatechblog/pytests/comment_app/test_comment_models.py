@@ -1,49 +1,86 @@
 import pytest
-from django.core.exceptions import ValidationError
-from blog.models import Blog
 from comment.models import Comment
-from user.models import User, Team
+from blog.models import Blog
+from user.models import User, Team, Role
+from django.core.exceptions import ValidationError
+from datetime import datetime
+
+
+@pytest.fixture
+def team_admin():
+    return Team.objects.create(title="admin")
+
+@pytest.fixture
+def team_user():
+    return Team.objects.create(title="engineering")
+
+@pytest.fixture
+def role_admin():
+    return Role.objects.create(title="admin")
+
+@pytest.fixture
+def role_user():
+    return Role.objects.create(title="member")
+
+@pytest.fixture
+def admin_user(team_admin, role_admin):
+    return User.objects.create(email="admin@example.com", is_staff=True, team=team_admin, role=role_admin)
+
+@pytest.fixture
+def user_with_access(team_user, role_user):
+    return User.objects.create(email="user1@example.com", team=team_user, role=role_user)
+
+@pytest.fixture
+def user_without_access(team_user, role_user):
+    return User.objects.create(email="user2@example.com", team=team_user, role=role_user)
+
+@pytest.fixture
+def blog(user_with_access):
+    return Blog.objects.create(
+        author=user_with_access,
+        title="Test Blog",
+        content="Content",
+        public_access="None",
+        authenticated_access="None",
+        team_access="None",
+        author_access="Read & Write"
+    )
 
 
 @pytest.mark.django_db
 class TestCommentModel:
 
-    def setup_method(self):
-        """Configura los datos de prueba."""
-        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass")
-        self.blog = Blog.objects.create(
-            author=self.user,
-            title="Sample Blog",
-            content="This is a test blog.",
-            public_access="Read Only",
-        )
-        self.comment = Comment.objects.create(user=self.user, blog=self.blog, content="Nice blog!")
+    def test_valid_comment_creation(self, user_with_access, blog):
+        comment = Comment(user=user_with_access, blog=blog, content="Nice post!")
+        comment.save()
+        assert Comment.objects.count() == 1
+        assert comment.content == "Nice post!"
 
-    def test_comment_creation(self):
-        """✅ Prueba que se pueda crear un comentario."""
-        assert self.comment.content == "Nice blog!"
-        assert self.comment.user == self.user
-        assert self.comment.blog == self.blog
+    def test_comment_without_content_raises_error(self, user_with_access, blog):
+        comment = Comment(user=user_with_access, blog=blog, content="")
+        with pytest.raises(ValidationError) as e:
+            comment.full_clean()
+        assert "Content must be set." in str(e.value)
 
-    def test_comment_str(self):
-        """✅ Prueba el método `__str__` del modelo `Comment`."""
-        assert str(self.comment) == f"Comment by {self.user.username} on {self.blog.title}"
+    def test_comment_on_nonexistent_blog_raises_error(self, user_with_access):
+        blog = Blog(id=999)  # blog no existe en la DB
+        comment = Comment(user=user_with_access, blog=blog, content="Hi")
+        with pytest.raises(ValidationError) as e:
+            comment.full_clean()
+        assert "The blog does not exists." in str(e.value)
 
-    def test_comment_timestamp_auto(self):
-        """✅ Prueba que el timestamp se asigna automáticamente al crear un comentario."""
-        assert self.comment.timestamp is not None
+    def test_admin_cannot_comment(self, admin_user, blog):
+        comment = Comment(user=admin_user, blog=blog, content="Admin trying to comment")
+        with pytest.raises(ValidationError) as e:
+            comment.full_clean()
+        assert "Administrators cannot comment blogs." in str(e.value)
 
-    def test_comment_access(self):
-        team = Team.objects.create(title="alpha")
-        user = User.objects.create_user(username="other", email="other@email.com", password="other", team=team)
-        team_blog = Blog.objects.create(
-            author=self.user,
-            title="Team Blog",
-            content="This is a team blog.",
-            authenticated_access="None",
-            public_access="None",
-        )
+    def test_user_without_permission_cannot_comment(self, user_without_access, blog):
+        comment = Comment(user=user_without_access, blog=blog, content="No access")
+        with pytest.raises(ValidationError) as e:
+            comment.full_clean()
+        assert "You do not have permission to comment this blog." in str(e.value)
 
-        with pytest.raises(ValidationError, match="You do not have permission to comment this blog."):
-            like = Comment.objects.create(user=user, blog=team_blog, content="Comment")
-            like.full_clean()
+    def test_str_method(self, user_with_access, blog):
+        comment = Comment(user=user_with_access, blog=blog, content="Nice!", timestamp=datetime.now())
+        assert str(comment) == f"Comment by {user_with_access.email} on {blog.title}"

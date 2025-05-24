@@ -30,12 +30,14 @@ class LikeViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         user = request.user
-        blog_id = kwargs.get('blog_id')  # Tomamos el blog_id desde la URL
+        if not user.is_authenticated:
+            return Response({"message": "Invalid credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+        blog_id = kwargs.get('blog_id')
         if not Blog.objects.filter(pk=blog_id).exists():
             return Response({"message": "No blog matches the query."}, status=status.HTTP_404_NOT_FOUND)
         blog = Blog.objects.get(pk=blog_id)
 
-        # Validar que el usuario tenga acceso al blog
         if not can_interact_blog(user, blog):
             return Response({"message": "You do not have permission to like this blog."}, status=status.HTTP_403_FORBIDDEN)
         # Verificar si el usuario ya ha dado like

@@ -10,6 +10,7 @@ import { LikeResponse } from '@models/Like.models';
 export class LikePaginatorComponent {
   @Input({required: true}) likes!: WritableSignal<LikeResponse | null>;
   @Input({required: true}) currentPage!: number;
+  @Input() message!: WritableSignal<string[]>;
   @Output() getLikesEmmitter = new EventEmitter();
 
   popoverOpen: boolean = false;

@@ -18,25 +18,25 @@ export class AuthService {
     private http: HttpClient,
     private tokenService: TokenService,
     private userService: UserService,
-  ) {  }
+  ) { }
 
-  login(email: string, password: string): Observable<User>{
+  login(email: string, password: string): Observable<User> {
     return this.http.post<User>(`${this.apiUrl}/api/user/login/`, {
       "email": email,
       "password": password
     }, {
       withCredentials: true,
     })
-    .pipe(
-      timeout(timeoutDuration),
-      tap( response =>{
-        this.userService.user.set(response);
-        localStorage.setItem('user', JSON.stringify(response));
-      })
-    );
+      .pipe(
+        timeout(timeoutDuration),
+        tap(response => {
+          this.userService.user.set(response);
+          localStorage.setItem('user', JSON.stringify(response));
+        })
+      );
   }
 
-  register(email: string, password: string): Observable<User>{
+  register(email: string, password: string): Observable<User> {
     return this.http.post<User>(`${this.apiUrl}/api/user/register/`, {
       "email": email,
       "password": password
@@ -47,24 +47,16 @@ export class AuthService {
     );
   }
 
-  logout(){
+  logout() {
     const csrfToken = this.tokenService.getToken('csrftoken');
     const headers = new HttpHeaders({
       'X-CSRFToken': csrfToken || '',
       'Content-Type': 'application/json',
     });
-    return this.http.post(`${this.apiUrl}/api/user/logout/`, {}, { 
+    return this.http.post(`${this.apiUrl}/api/user/logout/`, {}, {
       headers,
       withCredentials: true,
-    }).subscribe({
-      next: (response) =>{
-        this.userService.user.set(undefined);
-        localStorage.removeItem('user');
-        window.location.reload();
-      },
-      error: (err) =>{
-        alert("Server error. Could not logout. Try again.")
-      }
     });
   }
+
 }

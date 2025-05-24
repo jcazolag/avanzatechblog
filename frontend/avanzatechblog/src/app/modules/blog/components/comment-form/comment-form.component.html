@@ -1,20 +1,68 @@
-<div class="my-6 shadow rounded-md bg-neutral-50 border border-neutral-200">
+<div class="my-6 pb-2 shadow rounded-md bg-neutral-50 border border-neutral-200">
     <form [formGroup]="form" (ngSubmit)="commentPost()" class="p-4" name="commentForm" id="commentForm">
         <div>
-            <textarea 
-                class="w-full border rounded-md p-3 mt-2 min-h-[100px] text-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                name="content" id="content" formControlName="content" placeholder="Leave your comment"></textarea>
+            <div class="relative">
+                <textarea (focus)="onFocus()"
+                    class="w-full border rounded-md p-3 mt-2 min-h-[100px] text-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    name="content" id="content" formControlName="content" placeholder="Leave your comment"></textarea>
+            </div>
+            @if (form.get('content')?.touched && form.get('content')?.invalid) {
+            @if (form.get('content')?.hasError('required')) {
+            <p class="text-red-500 text-xs mt-1 ml-1">This field is mandatory</p>
+            }
+            }
         </div>
         <div class="mt-3 text-center sm:text-right">
-            <button type="submit"
-                class="rounded-md border border-blue-700 text-white bg-blue-700 hover:bg-blue-600 py-2 px-6 mt-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
+            <button type="submit" class="
+                text-white
+                cursor-pointer
+                focus:ring-4 
+                focus:ring-blue-300 
+                font-medium 
+                rounded-lg 
+                text-sm 
+                px-5 
+                py-2.5 
+                me-2 
+                mb-2 
+                focus:outline-none 
+            " [disabled]="status === 'loading'" [class]="{
+                'hover:bg-blue-800': status === 'init',
+                'bg-blue-700': status === 'init' || status === 'loading',
+                'bg-red-700': status === 'failed',
+                'hover:bg-red-800': status === 'failed'
+            }">
+                @if (status === 'init') {
                 Comment
+                }@else if (status === 'loading') {
+                <app-loading-animation [border_color]="'white'" />
+                }@else if (status === 'failed'){
+                Retry
+                }
             </button>
+            @if (contentFocused) {
+                <button class="
+                        text-white
+                        cursor-pointer
+                        focus:ring-4 
+                        focus:ring-blue-300 
+                        font-medium 
+                        rounded-lg 
+                        text-sm 
+                        px-5 
+                        py-2.5 
+                        me-2 
+                        mb-2 
+                        focus:outline-none
+                        bg-red-700
+                        hover:bg-red-800
+                    " (click)="cancel()" type="button">
+                    Cancel
+                </button>
+            }
         </div>
-        @if (message()) {
-        <div class="text-center mt-3 text-green-600">
-            {{message()}}
-        </div>
-        }
     </form>
+    @for (item of message(); track $index) {
+    <p class="text-red-500 text-center mt-1 ml-1 text-lg">{{item}}</p>
+    }
 </div>

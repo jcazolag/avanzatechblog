@@ -1,10 +1,13 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from django.db.models import Q
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
 from .models import Blog
 from .serializers import BlogSerializer
-from django.db.models import Q
 from .data.functions import can_edit_blog, can_view_blog
+
 
 class BlogPagination(PageNumberPagination):
     page_size = 10
@@ -21,74 +24,64 @@ class BlogPagination(PageNumberPagination):
             'results': data
         })
 
+
 class BlogViewSet(viewsets.ModelViewSet):
     queryset = Blog.objects.all()
-    serializer_class = BlogSerializer
     pagination_class = BlogPagination
+    serializer_class = BlogSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Lectura para todos, escritura autenticado
 
-    def create(self, request, *args, **kwargs):
-        user = request.user
-        if not user.is_authenticated:
-            return Response({'message': 'You have to be loged to post a blog.'}, status=status.HTTP_400_BAD_REQUEST)
-        if user.is_staff:
-            return Response({'message': 'Admins can not create blogs'}, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid(raise_exception=False):
-            serializer.save()
-            return Response({"message": "success", "post": serializer.data}, status=status.HTTP_201_CREATED)
-        return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, *args, **kwargs):
-        user = request.user
-        blog = self.get_object()  # Maneja automáticamente el 404
-        if not can_edit_blog(user, blog):
-            return Response({"message": "You don't have permission to edit this blog."}, status=status.HTTP_401_UNAUTHORIZED)
-        serializer = self.get_serializer(blog, data=request.data, partial=False)
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def list(self, request, *args, **kwargs):
         user = request.user
+        filters = Q(public_access='Read Only')
 
-        filters = Q(public_access__in=['Read Only'])
         if user.is_authenticated:
             filters |= Q(authenticated_access__in=['Read Only', 'Read & Write'])
-            filters |= Q(author_access__in=['Read Only', 'Read & Write'], author=user)
+            filters |= Q(author=user, author_access__in=['Read Only', 'Read & Write'])
 
-            # Si el usuario tiene un equipo, aplicamos el filtro de equipo
-            if hasattr(user, 'team'):
-                filters |= Q(team_access__in=['Read Only', 'Read & Write'], author__team=user.team)
+            if hasattr(user, 'team') and user.team:
+                filters |= Q(author__team=user.team, team_access__in=['Read Only', 'Read & Write'])
 
-        # Aplicamos el filtro a la consulta
-        posts = Blog.objects.filter(filters).distinct()
-        
-        # Aplicar paginación
-        paginator = self.pagination_class()
-        paginated_likes = paginator.paginate_queryset(posts, request)
-        serializer = self.get_serializer(paginated_likes, many=True)
+        blogs = Blog.objects.filter(filters).distinct()
 
-        return paginator.get_paginated_response(serializer.data)
-    
+        page = self.paginate_queryset(blogs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(blogs, many=True)
+        return Response(serializer.data)
+
     def retrieve(self, request, *args, **kwargs):
-        user = request.user
         blog = self.get_object()
-
-        if can_view_blog(user, blog):
-            serializer = self.get_serializer(blog)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        if not can_view_blog(request.user, blog):
+            return Response({'message': 'You do not have access to this blog.'}, status=status.HTTP_404_NOT_FOUND)
         
-        return Response({'message': 'You do not have access to this blog.'}, status=status.HTTP_404_NOT_FOUND)
-    
-    def destroy(self, request, *args, **kwargs):
-        user = request.user
-        blog = self.get_object()
+        serializer = self.get_serializer(blog)
+        return Response(serializer.data)
 
-        if can_edit_blog(user, blog):
-            self.perform_destroy(blog)
-            return Response({"message": "Blog removed successfully."},status=status.HTTP_204_NO_CONTENT)
-        return Response({'message': 'You do not have permission to delete this blog.'}, status=status.HTTP_401_UNAUTHORIZED)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        blog = self.get_object()
+        if not can_edit_blog(request.user, blog):
+            return Response({'message': 'You do not have permission to edit this blog.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = self.get_serializer(blog, data=request.data, partial=False, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        blog = self.get_object()
+        if not can_edit_blog(request.user, blog):
+            return Response({'message': 'You do not have permission to delete this blog.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        self.perform_destroy(blog)
+        return Response({'message': 'Blog removed successfully.'}, status=status.HTTP_204_NO_CONTENT)
+

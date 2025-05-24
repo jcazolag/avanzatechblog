@@ -12,11 +12,13 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {'password': {'write_only': True}, 'team': {'read_only': True}}
 
-    def create(self, validated_data):
-        email=validated_data['email']
-        password=validated_data['password']
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with that email already exists.")
+        return value
 
-        #new_user = User.objects.create_user(email=email, username=username, password=password)
-        #new_user.save()
-        #return new_user
-        return User.objects.create_user(email=email, password=password)
+    def create(self, validated_data):
+        return User.objects.create_user(
+            email=validated_data['email'],
+            password=validated_data['password']
+        )

@@ -19,7 +19,7 @@ export class CsrftokenService {
 
   /**
    * Obtiene el CSRF token desde el backend y lo guarda como cookie automáticamente.
-   * @returns Observable<boolean> indicando si fue exitoso.
+   * @returns Observable<Generic> indicando si fue exitoso.
    */
   fetchCsrfToken(): Observable<Generic> {
     return this.http.get<Generic>(`${this.apiUrl}/api/get_csfr/`, { withCredentials: true })

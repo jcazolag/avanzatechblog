@@ -1,5 +1,6 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal, WritableSignal } from '@angular/core';
 import { AlertComponent } from '../alert/alert.component';
+import { RequestStatus } from '@models/request-status.models';
 
 @Component({
   selector: 'app-delete-button',
@@ -8,8 +9,10 @@ import { AlertComponent } from '../alert/alert.component';
   styleUrl: './delete-button.component.css'
 })
 export class DeleteButtonComponent {
-  @Output() action = new EventEmitter()
-  @Input({required: true}) title!: string
+  @Output() action = new EventEmitter();
+  @Input({required: true}) title!: string;
+  @Input({required: true}) status: WritableSignal<RequestStatus>  = signal<RequestStatus>('init');
+  @Input({required: true}) message: WritableSignal<string[]> = signal<string[]>([]);
   alert: boolean = false
 
   toggleAlert(){

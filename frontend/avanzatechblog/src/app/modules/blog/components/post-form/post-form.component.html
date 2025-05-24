@@ -24,9 +24,16 @@
         <div class="relative">
             <label for="content">
                 Content
-                <textarea formControlName="content" placeholder="" name="content" id="content"
-                    class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 min-h-30">
-                    </textarea>
+                <!--
+                    <textarea formControlName="content" placeholder="" name="content" id="content"
+                        class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 min-h-30">
+                        </textarea>
+                -->
+                <div class="NgxEditor__Wrapper min-h-30 bg-white">
+                    <ngx-editor-menu [editor]="editor" [toolbar]="toolbar"></ngx-editor-menu>
+                    <ngx-editor [editor]="editor" formControlName="content" [placeholder]="'Post content...'">
+                    </ngx-editor>
+                </div>
             </label>
         </div>
         @if (form.get('content')?.touched && form.get('content')?.invalid) {
@@ -90,12 +97,28 @@
 
     <div class="grid grid-cols-1  sm:grid-cols-2">
         <div class="text-center">
-            <button type="submit"
-                class="border rounded-md p-2 px-6 bg-blue-600 text-white m-2 hover:bg-blue-500 focus:bg-blue-700 cursor-pointer">{{buttonText}}</button>
+            <button type="submit" class="border rounded-md p-2 px-6 bg-blue-600 text-white m-2 cursor-pointer" [class]="{
+                    'bg-blue-600': status() === 'init' || status() === 'loading',
+                    'hover:bg-blue-500': status() === 'init',
+                    'bg-red-600': status() === 'failed',
+                    'hover:bg-red-500': status() === 'failed'
+                }" [disabled]="status() === 'loading'">
+                @if (status() === 'init') {
+                {{buttonText}}
+                }@else if (status() === 'loading') {
+                <div class="flex items-center justify-center w-10" title="Loading...">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2"></div>
+                    <span class="sr-only">Loading...</span>
+                </div>
+                }@else if (status() === 'failed') {
+                Rety
+                }
+            </button>
         </div>
         <div class="text-center">
             <button type="button"
-                class="border rounded-md p-2 px-6 bg-red-600 text-white m-2 hover:bg-red-500 focus:bg-red-700 cursor-pointer" (click)="cancel()">Cancel</button>
+                class="border rounded-md p-2 px-6 bg-red-600 text-white m-2 hover:bg-red-500 focus:bg-red-700 cursor-pointer"
+                (click)="cancel()">Cancel</button>
         </div>
     </div>
 </form>

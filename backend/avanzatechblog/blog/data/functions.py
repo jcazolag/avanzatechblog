@@ -1,29 +1,52 @@
-def can_edit_blog(user, blog):
-    return (
-        user.is_authenticated and (
-            (blog.author == user and blog.author_access == 'Read & Write') or
-            (blog.team_access == 'Read & Write' and user.team == blog.author.team) or
-            (blog.authenticated_access == 'Read & Write')
-        )
-    )
+from typing import Union
+from user.models import User
+from blog.models import Blog
+from django.contrib.auth.models import AnonymousUser
 
-def can_view_blog(user, blog):
-    return (
-        blog.public_access in ['Read Only'] or (
-            user.is_authenticated and (
-                (blog.authenticated_access in ['Read Only', 'Read & Write']) or
-                (blog.author == user and blog.author_access in ['Read Only', 'Read & Write']) or
-                (hasattr(user, 'team') and blog.team_access in ['Read Only', 'Read & Write'] and blog.author.team == user.team)
-            )
-        )
-    )
+UserType = Union[User, AnonymousUser]
 
-def can_interact_blog(user, blog):
-        """Verifica si el usuario tiene permisos para comentar al blog."""
-        return (
-            user.is_authenticated and (
-                (blog.authenticated_access in ['Read Only', 'Read & Write']) or
-                (user == blog.author and blog.author_access in ['Read Only', 'Read & Write']) or
-                (hasattr(user, 'team') and blog.team_access in ['Read Only', 'Read & Write'] and blog.author.team == user.team)
-            )
-        )
+READABLE = ['Read Only', 'Read & Write']
+WRITABLE = ['Read & Write']
+
+def _validate_inputs(user: UserType, blog: Blog):
+    if not isinstance(user, (User, AnonymousUser)):
+        raise TypeError(f"{user} is not an instance of User or AnonymousUser")
+    if not isinstance(blog, Blog):
+        raise TypeError(f"{blog} is not an instance of Blog")
+
+def can_edit_blog(user: UserType, blog: Blog) -> bool:
+    _validate_inputs(user, blog)
+    if not user.is_authenticated:
+        return False
+
+    is_author = blog.author == user and blog.author_access in WRITABLE
+    is_team_member = hasattr(user, 'team') and blog.author.team == user.team and blog.team_access in WRITABLE
+    is_authenticated_user = blog.authenticated_access in WRITABLE
+
+    return is_author or is_team_member or is_authenticated_user
+
+def can_view_blog(user: UserType, blog: Blog) -> bool:
+    _validate_inputs(user, blog)
+
+    if blog.public_access in READABLE:
+        return True
+
+    if not user.is_authenticated:
+        return False
+
+    is_authenticated_user = blog.authenticated_access in READABLE
+    is_author = blog.author == user and blog.author_access in READABLE
+    is_team_member = hasattr(user, 'team') and blog.author.team == user.team and blog.team_access in READABLE
+
+    return is_authenticated_user or is_author or is_team_member
+
+def can_interact_blog(user: UserType, blog: Blog) -> bool:
+    _validate_inputs(user, blog)
+    if not user.is_authenticated:
+        return False
+
+    is_authenticated_user = blog.authenticated_access in READABLE
+    is_author = blog.author == user and blog.author_access in READABLE
+    is_team_member = hasattr(user, 'team') and blog.author.team == user.team and blog.team_access in READABLE
+
+    return is_authenticated_user or is_author or is_team_member

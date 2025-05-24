@@ -11,8 +11,8 @@ def api_client():
 
 @pytest.fixture
 def create_users():
-    user = User.objects.create_user(username="user", email="user@test.com", password="testpass")
-    admin = User.objects.create_superuser(username="admin", email="admin@test.com", password="adminpass")
+    user = User.objects.create_user(email="user@test.com", password="testpass")
+    admin = User.objects.create_superuser(email="admin@test.com", password="adminpass")
     return user, admin
 
 @pytest.fixture
