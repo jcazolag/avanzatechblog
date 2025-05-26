@@ -33,7 +33,7 @@ export class DetailContentComponent {
         this.postService.editPost(id, newPost)
         .subscribe({
           next: (response) =>{
-            this.status.set('success');
+            this.status.set('init');
             this.post.set(response)
             this.edit.set(false);
           },

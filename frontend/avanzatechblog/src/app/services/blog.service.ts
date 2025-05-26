@@ -25,9 +25,9 @@ export class BlogService {
       withCredentials: true
     }).pipe(
       timeout(timeoutDuration),
-      tap( response => {
-        this.Blog.set(response);
-      })
+      // tap( response => {
+      //   this.Blog.set(response);
+      // })
     );
   }
 

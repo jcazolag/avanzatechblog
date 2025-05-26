@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import ListComponent from './list.component';
 import { Component, signal, WritableSignal } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { finalize, of, throwError } from 'rxjs';
 import { BlogService } from '@services/blog.service';
 import { UserService } from '@services/user.service';
 import { Blog } from '@models/Blog.model';
@@ -118,14 +118,14 @@ describe('ListComponent', () => {
     it('should set status to "success" on successful data retrieval', fakeAsync(() => {
       blogServiceSpy.getBlog.and.returnValue(of(mockBlogData));
       component.getBlog();
-      tick();
+      fixture.detectChanges();
       expect(component.status()).toBe('success');
     }));
 
     it('should set Blog to mockBlogData', fakeAsync(() => {
       blogServiceSpy.getBlog.and.returnValue(of(mockBlogData));
       component.getBlog();
-      tick();
+      fixture.detectChanges();
       expect(component.Blog()).toBe(mockBlogData);
     }));
 
@@ -140,7 +140,7 @@ describe('ListComponent', () => {
         throwError(() => errorResponse)
       );
       component.getBlog();
-      tick();
+      fixture.detectChanges();
       const status = component.status();
       expect(status).toBe('404');
     }));
@@ -150,7 +150,7 @@ describe('ListComponent', () => {
         throwError(() => ({ status: 0 }))
       );
       component.getBlog();
-      tick();
+      fixture.detectChanges();
       const status = component.status();
       expect(status).toBe('500');
     }));
@@ -160,7 +160,6 @@ describe('ListComponent', () => {
     it('should display posts when Blog has results', fakeAsync(() => {
       blogServiceSpy.getBlog.and.returnValue(of(mockBlogData));
       component.getBlog();
-      tick();
       fixture.detectChanges();
 
       const postElements = fixture.nativeElement.querySelectorAll('app-post');
@@ -174,7 +173,6 @@ describe('ListComponent', () => {
       };
       blogServiceSpy.getBlog.and.returnValue(of(emptyBlogData));
       component.getBlog();
-      tick();
       fixture.detectChanges();
 
       const messageElement = fixture.nativeElement.querySelector('p.text-center');
@@ -186,7 +184,6 @@ describe('ListComponent', () => {
         throwError(() => ({ status: 404 }))
       );
       component.getBlog();
-      tick();
       fixture.detectChanges();
 
       const notFoundElement = fixture.nativeElement.querySelector('app-notfound');
@@ -198,7 +195,6 @@ describe('ListComponent', () => {
         throwError(() => ({ status: 0 }))
       );
       component.getBlog();
-      tick();
       fixture.detectChanges();
 
       const serverErrorElement = fixture.nativeElement.querySelector('app-server-error');

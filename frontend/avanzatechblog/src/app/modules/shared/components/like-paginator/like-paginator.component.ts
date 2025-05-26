@@ -22,7 +22,7 @@ export class LikePaginatorComponent {
   }
 
   togglePopover(event: MouseEvent) {
-    event.stopPropagation(); // Evita que el clic burbujee y lo cierre inmediatamente
+    event.stopPropagation();
     this.popoverOpen = !this.popoverOpen;
   }
 

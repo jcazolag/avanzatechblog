@@ -11,10 +11,10 @@
         </div>
         @if (form.get('title')?.touched && form.get('title')?.invalid) {
         @if (form.get('title')?.hasError('required')) {
-        <p class="text-red-500 text-xs mt-1 ml-1">This field is mandatory</p>
+        <p class="text-red-500 text-xs mt-1 ml-1" name="warning">This field is mandatory</p>
         }
         @if (form.get('title')?.hasError('maxlength')) {
-        <p class="text-red-500 text-xs mt-1 ml-1">This field should be less or equal than 50 characters</p>
+        <p class="text-red-500 text-xs mt-1 ml-1" name="warning">This field should be less or equal than 50 characters</p>
         }
         }
     </div>
@@ -38,7 +38,7 @@
         </div>
         @if (form.get('content')?.touched && form.get('content')?.invalid) {
         @if (form.get('content')?.hasError('required')) {
-        <p class="text-red-500 text-xs mt-1 ml-1">This field is mandatory</p>
+        <p class="text-red-500 text-xs mt-1 ml-1" name="warning">This field is mandatory</p>
         }
         }
     </div>
@@ -111,12 +111,12 @@
                     <span class="sr-only">Loading...</span>
                 </div>
                 }@else if (status() === 'failed') {
-                Rety
+                Retry
                 }
             </button>
         </div>
         <div class="text-center">
-            <button type="button"
+            <button type="button" name="cancel"
                 class="border rounded-md p-2 px-6 bg-red-600 text-white m-2 hover:bg-red-500 focus:bg-red-700 cursor-pointer"
                 (click)="cancel()">Cancel</button>
         </div>

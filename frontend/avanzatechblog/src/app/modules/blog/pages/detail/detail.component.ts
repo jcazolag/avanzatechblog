@@ -113,7 +113,7 @@ export default class DetailComponent {
 
 
   toggleEdit() {
-    this.edit.set(!this.edit())
+    this.edit.update( val => !val);
   }
 
   private getPost() {
@@ -227,7 +227,7 @@ export default class DetailComponent {
           this.likedStatus.set('init');
         },
         error: (err) => {
-          console.error('Error eliminando like:', err);
+          this.likedStatus.set('init');
         },
       });
     } else {
@@ -239,7 +239,7 @@ export default class DetailComponent {
           this.likedStatus.set('init');
         },
         error: (err) => {
-          console.error('Error creando like:', err);
+          this.likedStatus.set('init');
         },
       });
     }
@@ -253,7 +253,7 @@ export default class DetailComponent {
     this.postService.deletePost(post.id)
       .subscribe({
         next: (response) => {
-          this.deleteStatus.set('loading');
+          this.deleteStatus.set('success');
           this.router.navigate(['/']);
         },
         error: (err) => {

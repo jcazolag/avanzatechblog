@@ -1,7 +1,7 @@
 <header class="w-full bg-neutral-100 border-b shadow">
     <div class="mx-auto px-4 py-3 flex justify-between items-center">
         <!-- Logo + Title -->
-        <a routerLink="/" class="flex items-center space-x-2">
+        <a (click)="goToHome()" class="flex items-center space-x-2 cursor-pointer">
             <img src="assets/Logo.png" alt="Logo" class="h-8 w-10" />
             <span class="text-md font-bold ">Avanzatech</span>
         </a>
@@ -33,8 +33,8 @@
                 }
             </button>
             } @else {
-            <a routerLink="/login" class="text-blue-600 hover:underline">Login</a>
-            <a routerLink="/register" class="text-blue-600 hover:underline">Register</a>
+            <a (click)="goToLogin()" name="Login" class="block text-blue-600 hover:underline cursor-pointer">Login</a>
+            <a (click)="goToRegister()" name="Register" class="block text-blue-600 hover:underline cursor-pointer">Register</a>
             }
         </nav>
     </div>
@@ -58,8 +58,8 @@
             }
         </button>
         } @else {
-        <a routerLink="/login" class="block text-blue-600 hover:underline cursor-pointer">Login</a>
-        <a routerLink="/register" class="block text-blue-600 hover:underline cursor-pointer">Register</a>
+        <a (click)="goToLogin()" name="Login" class="block text-blue-600 hover:underline cursor-pointer">Login</a>
+        <a (click)="goToRegister()" name="Register" class="block text-blue-600 hover:underline cursor-pointer">Register</a>
         }
     </div>
     }

@@ -35,6 +35,7 @@ export default class ListComponent {
     this.blogService.getBlog(this.Page).subscribe({
       next: (response) =>{
         this.status.set('success');
+        this.Blog.set(response);
       },
       error: (err) => {
         if (err.status === 404) {

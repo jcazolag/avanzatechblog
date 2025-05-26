@@ -1,6 +1,9 @@
+import { RouterTestingModule } from '@angular/router/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import NotFoundComponent from './not-found.component';
+import { NotfoundComponent } from '@modules/shared/notfound/notfound.component';
+import { By } from '@angular/platform-browser';
 
 describe('NotFoundComponent', () => {
   let component: NotFoundComponent;
@@ -8,7 +11,7 @@ describe('NotFoundComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NotFoundComponent]
+      imports: [NotFoundComponent, NotfoundComponent, RouterTestingModule]
     })
     .compileComponents();
 
@@ -19,5 +22,10 @@ describe('NotFoundComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should render <app-notfound/>', () => {
+    const notfound = fixture.debugElement.query(By.css('app-notfound'));
+    expect(notfound).toBeTruthy();
   });
 });

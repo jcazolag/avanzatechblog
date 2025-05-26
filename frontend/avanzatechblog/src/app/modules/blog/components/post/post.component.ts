@@ -20,7 +20,6 @@ import { RequestStatus } from '@models/request-status.models';
   selector: 'app-post',
   imports: [
     CommonModule,
-    RouterLinkWithHref,
     LikePaginatorComponent,
     CommentsCountComponent,
     EditButtonComponent,
@@ -80,6 +79,8 @@ export class PostComponent {
 
   toggleAlert() {
     this.alert = !this.alert;
+    this.deleteMessage.set([]);
+    this.deleteStatus.set('init');
   }
 
   userLiked() {
@@ -185,6 +186,7 @@ export class PostComponent {
         .subscribe({
           next: (response) => {
             this.deleteStatus.set('success');
+            this.deleteMessage.set([]);
             this.getBlog.emit();
           },
           error: (err) => {
@@ -209,8 +211,12 @@ export class PostComponent {
     this.popoverOpen = !this.popoverOpen;
   }
 
-  goToDetail() {
-    this.router.navigate(['/post', this.post.id], { queryParams: { edit_post: true, } })
+  goToDetail(edit: boolean = false) {
+    if (edit){
+      this.router.navigate(['/post', this.post.id], { queryParams: { edit_post: true, } })
+    }else{
+      this.router.navigate(['/post', this.post.id])
+    }
   }
 
   @HostListener('document:click', ['$event'])

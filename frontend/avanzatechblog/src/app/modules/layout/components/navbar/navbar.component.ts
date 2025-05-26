@@ -1,6 +1,6 @@
 import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { UserService } from '@services/user.service';
-import { Router, RouterLinkWithHref } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '@services/auth.service';
 import { RequestStatus } from '@models/request-status.models';
 import { LoadingAnimationComponent } from '@modules/shared/components/loading-animation/loading-animation.component';
@@ -8,7 +8,7 @@ import { AlertComponent } from '@modules/shared/components/alert/alert.component
 
 @Component({
   selector: 'app-navbar',
-  imports: [RouterLinkWithHref, LoadingAnimationComponent, AlertComponent],
+  imports: [LoadingAnimationComponent, AlertComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.css'
 })
@@ -33,10 +33,13 @@ export class NavbarComponent {
 
   toggleAlert(){
     this.alert = !this.alert;
+    this.message.set([]);
+    this.status.set('init');
   }
 
   logout() {
     this.status.set('loading');
+    this.message.set([]);
     this.authService.logout()
       .subscribe({
         next: (response) => {
@@ -44,6 +47,7 @@ export class NavbarComponent {
           this.user.set(undefined);
           localStorage.removeItem('user');
           this.alert = false;
+          this.message.set([]);
           this.router.navigate(['/'])
         },
         error: (err) => {
@@ -64,5 +68,23 @@ export class NavbarComponent {
           }
         }
       });
+  }
+
+  goToLogin(){
+    const user = this.user();
+    if(!user){
+      this.router.navigate(['/login']);
+    }
+  }
+
+  goToRegister(){
+    const user = this.user();
+    if(!user){
+      this.router.navigate(['/register']);
+    }
+  }
+
+  goToHome(){
+    this.router.navigate(['/']);
   }
 }

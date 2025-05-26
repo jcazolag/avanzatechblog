@@ -1,14 +1,14 @@
 <div class="shadow-md rounded-md p-4 mb-2 border border-neutral-200 bg-white">
-    <div class="text-lg font-semibold text-neutral-800 truncate"
+    <div class="text-lg font-semibold text-neutral-800 truncate" name="user_name"
          title="{{ comment.user_name }}">
         {{ comment.user_name }}
     </div>
     <div class="mt-2">
-        <p class="text-sm text-neutral-700 text-justify leading-relaxed overflow-auto">
+        <p class="text-sm text-neutral-700 text-justify leading-relaxed break-words" name="content">
             {{ comment.content }}
         </p>
     </div>
     <div class="mt-2">
-        <span class="text-xs text-neutral-500">{{ comment.timestamp | date: 'dd/MM/yyyy HH:mm:ss' }}</span>
+        <span class="text-xs text-neutral-500" name="date">{{ comment.timestamp | date: 'dd/MM/yyyy HH:mm:ss' }}</span>
     </div>
 </div>

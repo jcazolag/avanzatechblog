@@ -18,7 +18,7 @@
         <ul class="space-y-1 text-center font-medium m-2 max-h-48 overflow-y-auto">
             @if (message().length > 0) {
             @for (item of message(); track $index) {
-            <p class="text-red-500 text-center mt-1 ml-1 text-lg">{{item}}</p>
+            <p class="text-red-500 text-center mt-1 ml-1 text-lg" name="errorMsg">{{item}}</p>
             }
             }@else {
             @for (like of likes()?.results; track $index) {
@@ -35,13 +35,13 @@
         </ul>
         <hr>
         <div class="flex items-center justify-between mt-2 text-xs text-gray-500">
-            <button (click)="getLikes(currentPage - 1)" [class.disabled]="!likes()?.previous_page" [class]="{
+            <button name="previous" (click)="getLikes(currentPage - 1)" [class.disabled]="!likes()?.previous_page" [class]="{
                                     'hover:bg-gray-200': likes()?.previous_page,
                                     'cursor-pointer': likes()?.previous_page
                                 }" class="px-2 py-1 rounded border bg-gray-100 ">
                 < </button>
                     <span>Page {{ currentPage }} of {{likes()?.total_pages}}</span>
-                    <button (click)="getLikes(currentPage + 1)" [class.disabled]="!likes()?.next_page" [class]="{
+                    <button name="next" (click)="getLikes(currentPage + 1)" [class.disabled]="!likes()?.next_page" [class]="{
                                     'hover:bg-gray-200': likes()?.next_page,
                                     'cursor-pointer': likes()?.next_page
                                 }" class="px-2 py-1 rounded border bg-gray-100 disabled:opacity-50">
