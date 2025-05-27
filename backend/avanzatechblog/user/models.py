@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, UserManager
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.hashers import is_password_usable
+from django.contrib.auth.hashers import identify_hasher
 
 
 # Create your models here.
@@ -28,7 +28,6 @@ class CustomUserManager(UserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        user._password_already_hashed = True  # Marcar como ya hasheada
         user.save(using=self._db)
 
         return user
@@ -72,7 +71,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
-    _password_already_hashed = False
 
     class Meta:
         ordering = ["-date_joined"]
@@ -98,7 +96,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 
         self.team=team
         self.role=role
-        if not getattr(self, '_password_already_hashed', False):
+        try:
+            identify_hasher(self.password)
+        except:
             self.set_password(self.password)
-
         super().save(*args, **kwargs)

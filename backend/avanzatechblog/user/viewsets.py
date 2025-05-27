@@ -42,7 +42,9 @@ class UserViewset(viewsets.ModelViewSet):
     def login(self, request):
         username = request.data.get("email")
         password = request.data.get("password")
-        user = authenticate(request, username=username, password=password)
+        user = authenticate(request, email=username, password=password)
+        curr = User.objects.get(email=username)
+        print(curr)
         if not user:
             return Response({"message": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
         login(request, user)
